@@ -17,8 +17,10 @@ export default async function ClubDemoPage() {
   let profile: Profile;
   try { profile = JSON.parse(decodeURIComponent(raw)) as Profile; } catch { redirect("/registro"); }
   const missions = [
-    { id: "welcome-profile", code: "WELCOME_PROFILE", title: "Cuéntanos cómo caminas", description: "Completa tus preferencias para que podamos acompañarte mejor.", points_reward: 100 },
-    { id: "care-card", code: "CARE_CARD", title: "Cuida la historia que llevas", description: "Descubre el ritual de cuidado para el cuero que te acompaña.", points_reward: 50 },
+    { id: "welcome-profile", code: "WELCOME_PROFILE", title: "Cuéntanos cómo caminas", description: "Completa tus preferencias para que podamos acompañarte mejor.", points_reward: 100, completed: true },
+    { id: "care-card", code: "CARE_CARD", title: "Cuida la historia que llevas", description: "Descubre el ritual de cuidado para el cuero que te acompaña.", points_reward: 50, completed: true },
+    { id: "second-step", code: "SECOND_STEP", title: "Tu segunda caminata", description: "Vuelve a elegir una pieza cuando llegue el momento para ti.", points_reward: 250 },
+    { id: "complete-look", code: "COMPLETE_THE_LOOK", title: "Un gesto que acompaña", description: "Encuentra un accesorio para complementar una pieza que ya amas.", points_reward: 150 },
     { id: "real-walk", code: "REAL_WALK", title: "Una historia real", description: "Comparte un momento auténtico con tu pieza, si te nace hacerlo.", points_reward: 300 },
     { id: "walk-together", code: "WALK_TOGETHER", title: "Camina junto a una amiga", description: "Invita a una amiga a descubrir una pieza que también la acompañe.", points_reward: 300 }
   ];

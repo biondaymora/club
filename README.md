@@ -17,11 +17,15 @@ Plataforma de fidelización conectada con Shopify, Supabase y Omnisend.
 
 Consulta [la arquitectura](docs/architecture/overview.md), las [reglas de producto](docs/product-rules/loyalty.md) y los [runbooks](docs/runbooks/README.md) antes de modificar reglas comerciales.
 
+El [estudio de experiencia del Club](docs/research/loyalty-ux-benchmark-2026-10.md) explica las decisiones de recorrido, acciones y recompensas con referencias de programas comparables.
+
 ## Rutas principales
 
 - `/` — landing pública del Club con visuales locales de la marca.
 - `/landing` — alias de la landing pública.
 - `/login` — acceso de clientas mediante Magic Link.
+- `/registro` — entrada a la vista de prueba mediante nombre, correo y celular.
+- `/club/demo` — recorrido visual con puntos y canjes ilustrativos.
 - `/club` — área autenticada: saldo, historial y banco de recompensas.
 - `/admin` — panel autenticado de operación y canjes.
 - `/api/webhooks/shopify` — entrada firmada de eventos Shopify.

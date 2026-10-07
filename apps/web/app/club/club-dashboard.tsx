@@ -1,36 +1,139 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { createBrowserSupabaseClient } from "../../lib/supabase/browser";
+import { journeyStages, missionGuide, nextReward, recommendedMission, rewardGap, type Mission, type Reward, type StageId } from "./club-journey";
 import styles from "./club-dashboard.module.css";
 
-type Reward = { id: string; code: string; title: string; description: string; points_cost: number; stock: number | null };
-type Mission = { id: string; code: string; title: string; description: string; points_reward: number };
 type Ledger = { id: string; event_type: string; amount: number; occurred_at: string; metadata: Record<string, unknown> };
 type Member = { id: string; email: string; name?: string };
+type Account = { id: string; points_balance: number; tier_code: string } | null;
+const points = (value: number) => value.toLocaleString("es-CO");
 
-export default function ClubDashboard({ user, account, rewards, missions = [], ledger, demo = false }: { user: Member; account: { id: string; points_balance: number; tier_code: string } | null; rewards: Reward[]; missions?: Mission[]; ledger: Ledger[]; demo?: boolean }) {
+export default function ClubDashboard({ user, account, rewards, missions = [], ledger, demo = false }: {
+  user: Member; account: Account; rewards: Reward[]; missions?: Mission[]; ledger: Ledger[]; demo?: boolean;
+}) {
   const [balance, setBalance] = useState(account?.points_balance ?? 0);
+  const [ledgerEntries, setLedgerEntries] = useState(ledger);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState<string | null>(null);
-  async function redeem(reward: Reward) {
-    if (demo) { setBalance(value => value - reward.points_cost); setMessage(`¡Listo, ${user.name ?? ""}! Tu canje de “${reward.title}” quedó registrado como demostración.`); return; }
-    setLoading(reward.id); setMessage("");
-    const response = await fetch("/api/rewards/redeem", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rewardId: reward.id, customerId: user.id, idempotencyKey: crypto.randomUUID() }) });
-    const body = await response.json();
-    if (!response.ok) setMessage(body.error ?? "No pudimos procesar el canje."); else { setBalance(value => value - reward.points_cost); setMessage(`¡Listo! Tu canje de “${reward.title}” está pendiente de gestión.`); }
-    setLoading(null);
+  const [stageFilter, setStageFilter] = useState<StageId | "todas">("todas");
+  const [openMission, setOpenMission] = useState<string | null>(null);
+  const [demoRedemptions, setDemoRedemptions] = useState<string[]>([]);
+
+  const suggestedMission = recommendedMission(missions);
+  const upcomingReward = nextReward(rewards, balance);
+  const availableRewards = rewards.filter(reward => reward.stock !== 0 && reward.points_cost <= balance).length;
+  const visibleMissions = missions.filter(mission => stageFilter === "todas" || missionGuide(mission.code).stage === stageFilter);
+  const completedCount = missions.filter(mission => mission.completed).length;
+  const tierName = account?.tier_code === "member" ? "Esencia" : account?.tier_code ?? "Esencia";
+
+  function viewStage(stage: StageId) {
+    setStageFilter(stage);
+    document.getElementById("acciones")?.scrollIntoView({ behavior: "smooth" });
   }
+
+  function showMission(mission: Mission) {
+    setStageFilter(missionGuide(mission.code).stage);
+    setOpenMission(mission.id);
+    document.getElementById("acciones")?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  async function redeem(reward: Reward) {
+    if (reward.stock === 0 || balance < reward.points_cost || loading || demoRedemptions.includes(reward.id)) return;
+    if (demo) {
+      setBalance(current => current - reward.points_cost);
+      setDemoRedemptions(current => [...current, reward.id]);
+      setLedgerEntries(current => [{ id: `demo-${reward.id}`, event_type: "redeem", amount: -reward.points_cost, occurred_at: new Date().toISOString(), metadata: { reward_code: reward.code } }, ...current]);
+      setMessage(`Canje de muestra: “${reward.title}”. Esta vista no genera un beneficio real.`);
+      return;
+    }
+    setLoading(reward.id);
+    setMessage("");
+    try {
+      const response = await fetch("/api/rewards/redeem", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rewardId: reward.id, customerId: user.id, idempotencyKey: crypto.randomUUID() }) });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error ?? "No pudimos procesar el canje.");
+      setBalance(current => current - reward.points_cost);
+      setLedgerEntries(current => [{ id: `local-${reward.id}-${Date.now()}`, event_type: "redeem", amount: -reward.points_cost, occurred_at: new Date().toISOString(), metadata: { reward_code: reward.code } }, ...current]);
+      setMessage(`Canje solicitado: “${reward.title}”. Verás la confirmación cuando el equipo lo gestione.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "No pudimos procesar el canje.");
+    } finally {
+      setLoading(null);
+    }
+  }
+
   async function signOut() {
     if (demo) { window.location.href = "/registro"; return; }
-    await createBrowserSupabaseClient().auth.signOut(); window.location.href = "/";
+    await createBrowserSupabaseClient().auth.signOut();
+    window.location.href = "/";
   }
+
   return <main className={styles.page}>
-    <header><a href="/" className={styles.brand}>Bionda <i>y</i> Mora</a><div><span>{user.name ? `${user.name} · ${user.email}` : user.email}</span><button onClick={signOut}>{demo ? "Editar datos" : "Cerrar sesión"}</button></div></header>
-    <section className={styles.hero}><div><p className={styles.eyebrow}>TU CLUB {demo ? "· VISTA PREVIA" : ""}</p><h1>Hola, {user.name?.split(" ")[0] ?? ""}.<br /><em>Tu camino sigue sumando.</em></h1></div><article className={styles.balance}><p>PUNTOS DISPONIBLES</p><strong>{balance.toLocaleString("es-CO")}</strong><span>puntos</span><small>Nivel actual: <b>{account?.tier_code ?? "Esencia"}</b></small></article></section>
-    {missions.length > 0 && <section className={styles.section}><div><p className={styles.eyebrow}>ACCIONES PARA TI</p><h2>Pequeños gestos que abren camino.</h2></div><p className={styles.empty}>Comparte, cuida e inspira a tu manera. No necesitas vender: el Club celebra los momentos que hacen parte de tu historia.</p><div className={styles.rewards}>{missions.map(mission => <article key={mission.id}><p>{mission.code.replaceAll("_", " ")}</p><h3>{mission.title}</h3><span>{mission.description}</span><footer><b>+{mission.points_reward.toLocaleString("es-CO")} puntos</b><small className={styles.positive}>Disponible</small></footer></article>)}</div></section>}
-    <section className={styles.section}><div><p className={styles.eyebrow}>TU CÍRCULO</p><h2>Caminar juntas también cuenta.</h2></div><p className={styles.empty}>Invitar a una amiga o encontrarnos en una feria no es vender: es compartir una marca que te acompaña.</p><div className={styles.rewards}><article><p>CAMINA JUNTO A UNA AMIGA</p><h3>Una invitación con intención.</h3><span>Cuando tu amiga encuentre su primera pieza y pase el período de cambios, las dos recibirán un gesto del Club.</span><footer><b>+300 puntos para ambas</b><button onClick={() => setMessage("Las invitaciones personales se activarán en la beta conectada. Por ahora, comparte la marca sólo si sientes que puede acompañar a tu amiga.")}>Cómo funciona ↗</button></footer></article><article><p>ENCUENTROS BIONDA Y MORA</p><h3>Nos vemos en el camino.</h3><span>Cuando haya una feria o encuentro cerca de ti, podrás confirmar tu asistencia y desbloquear una experiencia especial.</span><footer><b>Agenda de ferias</b><button onClick={() => setMessage("Te avisaremos cuando se habilite la agenda de ferias y encuentros del Club.")}>Quiero enterarme ↗</button></footer></article></div></section>
-    <section className={styles.section}><div><p className={styles.eyebrow}>BANCO DE RECOMPENSAS</p><h2>Elige lo que te acompaña ahora.</h2></div><div className={styles.rewards}>{rewards.map(reward => <article key={reward.id}><p>{reward.code.replaceAll("_", " ")}</p><h3>{reward.title}</h3><span>{reward.description}</span><footer><b>{reward.points_cost.toLocaleString("es-CO")} puntos</b><button disabled={loading === reward.id || balance < reward.points_cost || reward.stock === 0} onClick={() => redeem(reward)}>{loading === reward.id ? "Procesando…" : balance < reward.points_cost ? "Aún no disponible" : "Redimir ↗"}</button></footer></article>)}</div>{message && <p className={styles.message} role="status">{message}</p>}</section>
-    <section className={`${styles.section} ${styles.history}`}><div><p className={styles.eyebrow}>TU HISTORIAL</p><h2>Todo lo que has recorrido.</h2></div>{ledger.length ? <ul>{ledger.map(item => <li key={item.id}><span>{item.event_type === "redeem" ? "↗" : "✦"}</span><div><b>{item.event_type === "redeem" ? "Canje de recompensa" : "Puntos obtenidos"}</b><small>{new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" }).format(new Date(item.occurred_at))}</small></div><strong className={item.amount < 0 ? styles.negative : styles.positive}>{item.amount > 0 ? "+" : ""}{item.amount.toLocaleString("es-CO")} puntos</strong></li>)}</ul> : <p className={styles.empty}>Tu historial aparecerá cuando recibamos tu primera compra o misión.</p>}</section>
+    <header className={styles.topbar}>
+      <a href="/" className={styles.brand}>Bionda <i>y</i> Mora</a>
+      <nav aria-label="Secciones del Club"><a href="#camino">Mi camino</a><a href="#acciones">Acciones</a><a href="#recompensas">Beneficios</a></nav>
+      <div className={styles.member}><span>{user.name?.split(" ")[0] ?? user.email}</span><button type="button" onClick={signOut}>{demo ? "Editar datos" : "Cerrar sesión"}</button></div>
+    </header>
+
+    <section className={styles.hero}>
+      <div><p className={styles.eyebrow}>CLUB BIONDA Y MORA {demo ? "· VISTA PREVIA" : ""}</p><h1>Hola, {user.name?.split(" ")[0] ?? "bienvenida"}.<br /><em>Cada paso cuenta.</em></h1><p>Descubre qué puedes hacer hoy y los beneficios que ya están a tu alcance.</p></div>
+      <div className={styles.balance}><span>PUNTOS DISPONIBLES</span><strong>{points(balance)}</strong><small>Tu nivel: {tierName}</small><a href="#recompensas">{availableRewards > 0 ? `${availableRewards} ${availableRewards === 1 ? "beneficio disponible" : "beneficios disponibles"}` : "Explorar beneficios"} ↗</a></div>
+    </section>
+
+    {demo && <p className={styles.previewNotice}>Vista de prueba: el saldo, los avances y los canjes de esta pantalla son ilustrativos.</p>}
+
+    <section className={styles.overview} aria-label="Tu siguiente paso y próxima recompensa">
+      <article className={styles.nextAction}>
+        <div className={styles.nextActionCopy}><p className={styles.eyebrow}>TU SIGUIENTE PASO</p><h2>{suggestedMission?.title ?? "Elige tu próximo gesto"}</h2><p>{suggestedMission?.description ?? "Explora las formas de participar en el Club a tu ritmo."}</p><div className={styles.actionBottom}><span>{suggestedMission ? `+${points(suggestedMission.points_reward)} puntos al validarse` : "Tú eliges cómo participar"}</span><button type="button" onClick={() => suggestedMission ? showMission(suggestedMission) : document.getElementById("acciones")?.scrollIntoView({ behavior: "smooth" })}>{suggestedMission ? "Ver cómo hacerlo" : "Ver acciones"} ↗</button></div></div>
+        <div className={styles.nextActionImage}><Image src="/brand/look.jpg" alt="Estilo Bionda y Mora" fill sizes="(max-width: 760px) 100vw, 280px" /></div>
+      </article>
+      <article className={styles.nextReward}>
+        <p className={styles.eyebrow}>BENEFICIO EN CAMINO</p>
+        {upcomingReward ? <><h2>{upcomingReward.title}</h2><p>Te faltan <strong>{points(rewardGap(balance, upcomingReward.points_cost))} puntos</strong> para poder elegirlo.</p><div className={styles.progressMeta}><span>{points(balance)} puntos</span><span>{points(upcomingReward.points_cost)} puntos</span></div><progress value={Math.min(balance, upcomingReward.points_cost)} max={upcomingReward.points_cost} aria-label={`Progreso hacia ${upcomingReward.title}`} /><small>{suggestedMission && suggestedMission.points_reward >= rewardGap(balance, upcomingReward.points_cost) ? `Una acción como “${suggestedMission.title}” puede acercarte a este beneficio cuando sea validada.` : "Con cada acción validada, te acercas a tu siguiente beneficio."}</small></> : <><h2>{rewards.length ? "Ya puedes elegir" : "Pronto habrá beneficios"}</h2><p>{rewards.length ? "Tu saldo alcanza los beneficios disponibles en este momento." : "El equipo está preparando el banco de recompensas."}</p></>}
+        <a href="#recompensas">Ver banco de recompensas ↗</a>
+      </article>
+    </section>
+
+    <section id="camino" className={styles.section}>
+      <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>TU CAMINO</p><h2>Así puedes vivir el Club.</h2><p>Una ruta para orientarte, sin plazos ni tareas obligatorias.</p></div>{missions.length > 0 && <span>{completedCount} de {missions.length} acciones completadas</span>}</div>
+      {missions.length > 0 ? <ol className={styles.path}>{journeyStages.map(stage => {
+        const stageMissions = missions.filter(mission => missionGuide(mission.code).stage === stage.id);
+        const done = stageMissions.filter(mission => mission.completed).length;
+        return <li key={stage.id}><button type="button" onClick={() => viewStage(stage.id)} aria-label={`Ver acciones de ${stage.title}`}><span className={styles.pathNumber}>{stage.number}</span><span className={styles.pathCopy}><strong>{stage.title}</strong><small>{stage.description}</small><em>{stageMissions.length ? `${done} de ${stageMissions.length} ${stageMissions.length === 1 ? "acción completada" : "acciones completadas"}` : "Explora esta etapa"}</em></span><span className={styles.pathArrow} aria-hidden="true">↗</span></button></li>;
+      })}</ol> : <p className={styles.empty}>Estamos preparando las próximas acciones del Club.</p>}
+    </section>
+
+    <section id="acciones" className={styles.section}>
+      <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>FORMAS DE SUMAR</p><h2>Acciones claras, a tu ritmo.</h2><p>Abre una acción para conocer qué hacer y cuándo se acreditan los puntos.</p></div></div>
+      <div className={styles.filters} aria-label="Filtrar acciones"><button type="button" aria-pressed={stageFilter === "todas"} onClick={() => setStageFilter("todas")}>Todas</button>{journeyStages.map(stage => <button key={stage.id} type="button" aria-pressed={stageFilter === stage.id} onClick={() => setStageFilter(stage.id)}>{stage.title}</button>)}</div>
+      {visibleMissions.length ? <div className={styles.missionList}>{visibleMissions.map(mission => {
+        const guide = missionGuide(mission.code);
+        const isOpen = openMission === mission.id;
+        const stage = journeyStages.find(item => item.id === guide.stage);
+        return <article className={styles.mission} key={mission.id}>
+          <div className={styles.missionMain}><div className={styles.missionIdentity}><span className={styles.missionStage}>{stage?.title} · {guide.time}</span><h3>{mission.title}</h3><p>{mission.description}</p></div><div className={styles.missionSide}><strong>+{points(mission.points_reward)} puntos</strong><span className={mission.completed ? styles.done : mission.pending ? styles.pending : styles.explore}>{mission.completed ? "Completada" : mission.pending ? "En revisión" : "Por explorar"}</span><button type="button" aria-expanded={isOpen} aria-controls={`mission-${mission.id}`} onClick={() => setOpenMission(isOpen ? null : mission.id)}>{isOpen ? "Cerrar detalles" : "Cómo sumar"} <span aria-hidden="true">{isOpen ? "−" : "+"}</span></button></div></div>
+          {isOpen && <div id={`mission-${mission.id}`} className={styles.missionDetails}><div><h4>Cómo participar</h4><ol>{guide.steps.map(step => <li key={step}>{step}</li>)}</ol></div><div><h4>Cuándo recibes los puntos</h4><p>{guide.validation}</p><small>{demo ? "Vista de prueba: explorar esta acción no acredita puntos reales." : "El saldo cambia después de la validación; abrir esta ficha no envía una participación."}</small></div></div>}
+        </article>;
+      })}</div> : <p className={styles.empty}>Aún no hay acciones en esta etapa. Puedes explorar las otras.</p>}
+    </section>
+
+    <section id="recompensas" className={styles.section}>
+      <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>BANCO DE RECOMPENSAS</p><h2>Beneficios por desbloquear.</h2><p>Ve lo que puedes redimir hoy y exactamente cuánto te falta para lo demás.</p></div><span>{points(balance)} puntos disponibles</span></div>
+      <div className={styles.rewardGrid}>{rewards.map(reward => {
+        const gap = rewardGap(balance, reward.points_cost);
+        const soldOut = reward.stock === 0;
+        const redeemed = demoRedemptions.includes(reward.id);
+        return <article className={styles.reward} key={reward.id}><span className={`${styles.rewardStatus} ${gap === 0 && !soldOut && !redeemed ? styles.rewardReady : ""}`}>{soldOut ? "Agotado" : redeemed ? "Canje de muestra" : gap === 0 ? "Puedes redimirlo" : `Te faltan ${points(gap)} puntos`}</span><h3>{reward.title}</h3><p>{reward.description}</p><div className={styles.rewardProgress}><progress value={Math.min(balance, reward.points_cost)} max={reward.points_cost} aria-label={`Puntos para ${reward.title}`} /><span>{points(Math.min(balance, reward.points_cost))} / {points(reward.points_cost)} puntos</span></div><div className={styles.rewardBottom}><strong>{points(reward.points_cost)} puntos</strong><button type="button" disabled={soldOut || gap > 0 || redeemed || loading !== null} onClick={() => redeem(reward)}>{loading === reward.id ? "Procesando…" : redeemed ? "Canje visto" : soldOut ? "Agotado" : gap > 0 ? "Aún no" : "Redimir ↗"}</button></div></article>;
+      })}</div>
+      {rewards.length === 0 && <p className={styles.empty}>El banco de recompensas se está preparando.</p>}
+      {message && <p className={styles.message} role="status">{message}</p>}
+    </section>
+
+    <section className={styles.community}><div><p className={styles.eyebrow}>EL CÍRCULO</p><h2>Caminar juntas también cuenta.</h2><p>Una amiga, una historia compartida o un encuentro en una feria pueden convertirse en parte de tu recorrido.</p></div><div><strong>Invita con intención</strong><p>El beneficio para ambas se confirma sólo después de una primera compra válida de tu amiga.</p><strong>Encuentros Bionda y Mora</strong><p>La agenda de ferias aparecerá aquí cuando haya fechas confirmadas.</p></div></section>
+
+    <section id="historial" className={`${styles.section} ${styles.history}`}><div className={styles.sectionHeading}><div><p className={styles.eyebrow}>TU HISTORIAL</p><h2>Todo lo que has recorrido.</h2></div></div>{ledgerEntries.length ? <ul>{ledgerEntries.map(item => <li key={item.id}><span aria-hidden="true">{item.amount < 0 ? "↗" : "✦"}</span><div><b>{item.amount < 0 ? "Canje de recompensa" : "Puntos obtenidos"}</b><small>{new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" }).format(new Date(item.occurred_at))}</small></div><strong className={item.amount < 0 ? styles.negative : styles.positive}>{item.amount > 0 ? "+" : ""}{points(item.amount)} puntos</strong></li>)}</ul> : <p className={styles.empty}>Tu historial aparecerá cuando recibamos tu primera compra o acción validada.</p>}</section>
   </main>;
 }
