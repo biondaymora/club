@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./brand-system.css";
 
 export const metadata: Metadata = {
   title: "Club Bionda y Mora",
