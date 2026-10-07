@@ -16,5 +16,11 @@ export default async function ClubDemoPage() {
   if (!raw) redirect("/registro");
   let profile: Profile;
   try { profile = JSON.parse(decodeURIComponent(raw)) as Profile; } catch { redirect("/registro"); }
-  return <ClubDashboard demo user={{ id: "beta-preview", email: profile.email, name: profile.name }} account={{ id: "preview-account", points_balance: 1240, tier_code: "Esencia" }} rewards={rewards} ledger={[{ id: "welcome", event_type: "earn", amount: 150, occurred_at: new Date().toISOString(), metadata: {} }, { id: "purchase", event_type: "earn", amount: 1090, occurred_at: new Date(Date.now() - 86400000 * 8).toISOString(), metadata: {} }]} />;
+  const missions = [
+    { id: "welcome-profile", code: "WELCOME_PROFILE", title: "Cuéntanos cómo caminas", description: "Completa tus preferencias para que podamos acompañarte mejor.", points_reward: 100 },
+    { id: "care-card", code: "CARE_CARD", title: "Cuida la historia que llevas", description: "Descubre el ritual de cuidado para el cuero que te acompaña.", points_reward: 50 },
+    { id: "real-walk", code: "REAL_WALK", title: "Una historia real", description: "Comparte un momento auténtico con tu pieza, si te nace hacerlo.", points_reward: 300 },
+    { id: "walk-together", code: "WALK_TOGETHER", title: "Camina junto a una amiga", description: "Invita a una amiga a descubrir una pieza que también la acompañe.", points_reward: 300 }
+  ];
+  return <ClubDashboard demo user={{ id: "beta-preview", email: profile.email, name: profile.name }} account={{ id: "preview-account", points_balance: 1240, tier_code: "Esencia" }} rewards={rewards} missions={missions} ledger={[{ id: "welcome", event_type: "earn", amount: 150, occurred_at: new Date().toISOString(), metadata: {} }, { id: "purchase", event_type: "earn", amount: 1090, occurred_at: new Date(Date.now() - 86400000 * 8).toISOString(), metadata: {} }]} />;
 }
