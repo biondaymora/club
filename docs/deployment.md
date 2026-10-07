@@ -27,6 +27,10 @@
 3. Configura `club.biondaymora.com` y, si corresponde, una redirección desde `www`.
 4. Ejecuta el checklist de [producción](production-readiness.md) antes de activar los webhooks reales.
 
+### Si el enlace de Vercel pide iniciar sesión
+
+El proyecto tiene **Deployment Protection** activada o el enlace pertenece a un deployment protegido. En Vercel, con acceso de propietario: abrir el proyecto, ir a **Settings → Deployment Protection**, desactivar la protección para Production o habilitar el método de acceso que usará el equipo. Luego abrir **Deployments**, confirmar que el deployment de producción apunta al último commit de `main` y promoverlo si fuese necesario. Sin esa configuración, el dominio puede redirigir a `vercel.com/login` aunque el código se haya subido correctamente a GitHub.
+
 ## Límites del paquete
 
 Las credenciales, permisos de las cuentas externas, configuración de DNS y aprobación de reglas comerciales requieren acceso de la marca; por seguridad no se incluyen en el código ni pueden activarse desde este ZIP.
