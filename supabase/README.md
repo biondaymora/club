@@ -4,3 +4,4 @@ Las migraciones se ejecutan en orden cronológico y son la única fuente de verd
 
 Los movimientos de `points_ledger` y `cashback_ledger` son append-only. Cualquier corrección se registra como una nueva entrada y un `audit_log`.
 
+Después de aplicar las migraciones, cargar `seeds/rewards.sql`. El archivo `seeds/missions.sql` contiene el banco de acciones propuesto para una beta controlada y requiere aprobación de negocio antes de cargarse.
