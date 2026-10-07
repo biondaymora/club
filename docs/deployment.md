@@ -18,7 +18,7 @@
 
 1. Crea una API key con permisos `contacts.write` y `events.write`.
 2. Configura `OMNISEND_API_KEY` y crea automations para `points_earned`, `tier_upgraded`, `cashback_earned` y `reward_redeemed`.
-3. Configura `CRON_SECRET`; Vercel invoca `/api/cron/outbox` cada 10 minutos. En Vercel, añade el header `Authorization: Bearer <CRON_SECRET>` mediante una integración segura o cambia a Vercel Cron con autenticación de plataforma.
+3. Configura `CRON_SECRET`; en Vercel Hobby, el cron invoca `/api/cron/outbox` una vez al día a las 12:00 UTC (07:00 en Colombia). Para entregar eventos con baja latencia, actualiza a Vercel Pro o usa una cola/worker externo.
 
 ## 4. Vercel
 
