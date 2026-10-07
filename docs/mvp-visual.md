@@ -1,20 +1,19 @@
-# MVP visual — Club Bionda y Mora
+# Experiencia visual y beta — Club Bionda y Mora
 
-El MVP permite validar la propuesta de valor y la navegación antes de conectar servicios externos.
+El repositorio conserva una única aplicación: `apps/web`. La ruta `/` es un demo visual autónomo para reuniones y `/club` es la experiencia autenticada preparada para la beta.
 
 ## Incluye
 
-- Inicio personalizado con puntos, progreso de nivel y cashback.
-- Misiones y un historial con información demostrativa.
-- Banco de recompensas con cuatro beneficios.
-- Canje simulado: valida los puntos disponibles, descuenta el saldo local y confirma la acción.
-- Diseño responsive, sin imágenes externas ni llamadas de red.
+- `/` — inicio, misiones, historial y recompensas demostrativos con datos de muestra.
+- `/landing` — presentación pública del Club, alineada con la identidad visual de Bionda y Mora.
+- `/login` y `/club` — acceso por Magic Link, saldo, historial y banco de recompensas reales.
+- `/admin` — operación de canjes para usuarias con rol administrador u operador.
+- Diseño responsive y recursos visuales locales de la marca.
 
 ## Aún no incluye
 
-- Autenticación, perfiles reales ni persistencia al actualizar la página.
-- Reglas reales de elegibilidad, inventario, vencimientos o cupones.
-- Integraciones con Shopify, Supabase u Omnisend.
-- Procesamiento financiero/comercial de una redención.
+- Activación de proveedores sin sus credenciales y configuración de entorno.
+- Reglas comerciales definitivas de puntos, cashback, vencimientos y devoluciones.
+- Entrega automática de beneficios o campañas de correo sin la aprobación operativa correspondiente.
 
-Cuando se conecte el backend, el estado local de la interfaz se reemplazará por los saldos y movimientos aprobados del ledger, y cada canje ejecutará el flujo idempotente de `reward_redemptions`.
+Las migraciones, funciones transaccionales, webhook de Shopify y outbox de Omnisend ya viven en el repositorio. Consulta el [plan de beta](beta-test-plan.md) para activar el entorno real.
