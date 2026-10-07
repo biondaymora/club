@@ -1,0 +1,4 @@
+* @bionda-mora/platform
+/supabase/ @bionda-mora/platform @bionda-mora/data
+/docs/product-rules/ @bionda-mora/product @bionda-mora/platform
+
