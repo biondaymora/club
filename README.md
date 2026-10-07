@@ -19,8 +19,8 @@ Consulta [la arquitectura](docs/architecture/overview.md), las [reglas de produc
 
 ## Rutas principales
 
-- `/` — prototipo visual autónomo para reuniones.
-- `/landing` — landing pública del Club con visuales locales de la marca.
+- `/` — landing pública del Club con visuales locales de la marca.
+- `/landing` — alias de la landing pública.
 - `/login` — acceso de clientas mediante Magic Link.
 - `/club` — área autenticada: saldo, historial y banco de recompensas.
 - `/admin` — panel autenticado de operación y canjes.
@@ -30,8 +30,4 @@ Consulta [la arquitectura](docs/architecture/overview.md), las [reglas de produc
 Consulta la [guía de puesta en marcha](docs/deployment.md) para conectar los proveedores reales.
 Para activar la beta con clientas, sigue el [plan de pruebas](docs/beta-test-plan.md).
 
-## MVP visual
-
-La primera versión presentable del Club vive en `apps/web/app/page.tsx`. Es una experiencia interactiva con datos de muestra: incluye puntos, nivel, cashback, misiones, historial y un banco de recompensas con canje simulado. No requiere Shopify, Supabase ni Omnisend para su demostración.
-
-Consulta [el alcance del MVP visual](docs/mvp-visual.md) para distinguir los comportamientos simulados de las integraciones por construir.
+Consulta el [alcance de la experiencia visual y beta](docs/mvp-visual.md) para distinguir las rutas públicas de las que requieren integración.
