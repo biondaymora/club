@@ -12,22 +12,23 @@ Plataforma de fidelización conectada con Shopify, Supabase y Omnisend.
 ## Inicio local
 
 1. Copia `.env.example` como `.env.local` y completa las credenciales de desarrollo.
-2. Instala dependencias desde la raíz con `npm install`.
+2. Instala dependencias desde la raíz con `npm ci`.
 3. Ejecuta `npm run dev`.
-
-Al crear el primer `package-lock.json`, súbelo al repositorio y cambia el flujo de CI de `npm install` a `npm ci` para instalaciones reproducibles.
 
 Consulta [la arquitectura](docs/architecture/overview.md), las [reglas de producto](docs/product-rules/loyalty.md) y los [runbooks](docs/runbooks/README.md) antes de modificar reglas comerciales.
 
 ## Rutas principales
 
-- `/` — Club de fidelización para miembros.
+- `/` — prototipo visual autónomo para reuniones.
 - `/landing` — landing pública del Club con visuales locales de la marca.
-- `/admin` — panel administrativo inicial.
+- `/login` — acceso de clientas mediante Magic Link.
+- `/club` — área autenticada: saldo, historial y banco de recompensas.
+- `/admin` — panel autenticado de operación y canjes.
 - `/api/webhooks/shopify` — entrada firmada de eventos Shopify.
 - `/api/rewards/redeem` — canje idempotente de recompensas.
 
 Consulta la [guía de puesta en marcha](docs/deployment.md) para conectar los proveedores reales.
+Para activar la beta con clientas, sigue el [plan de pruebas](docs/beta-test-plan.md).
 
 ## MVP visual
 

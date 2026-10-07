@@ -28,3 +28,13 @@
 - [ ] Runbooks y responsables de incidentes acordados.
 - [ ] Plan de rollback de aplicación y de migración revisado.
 
+## Beta con primeras clientas
+
+- [ ] Se creó un proyecto Supabase **separado** para producción/beta y se aplicaron, en orden, todas las migraciones de `supabase/migrations`.
+- [ ] Se cargó `supabase/seeds/rewards.sql` y el equipo revisó stock, costos y términos de cada recompensa.
+- [ ] Se configuró Magic Link en Supabase: URL del sitio, URL de redirección `/auth/callback` y remitente aprobado.
+- [ ] Se creó una cuenta administradora en `auth.users` y se insertó su id en `admin_roles` con rol `operator` o `admin`.
+- [ ] Se crearon al menos dos cuentas de prueba: una con puntos suficientes y otra sin saldo suficiente.
+- [ ] Se realizó un canje de prueba, se marcó como entregado y se verificó el ajuste en el ledger.
+- [ ] Se comprobó que una clienta no puede consultar ni canjear desde la cuenta de otra.
+- [ ] Shopify y Omnisend se prueban primero con datos de prueba; no habilitar campañas automáticas antes de validar consentimiento.

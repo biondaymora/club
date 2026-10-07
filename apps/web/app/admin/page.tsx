@@ -1,5 +1,31 @@
-const metrics = [{ label: "Miembros activos", value: "1.284", change: "+12,4%" }, { label: "Puntos emitidos", value: "284.560", change: "+8,2%" }, { label: "Canjes pendientes", value: "18", change: "Requieren gestión" }];
+import { redirect } from "next/navigation";
+import { createServerSupabaseClient } from "../../lib/supabase/server";
+import { createAdminClient } from "../../lib/supabase/admin";
+import RedemptionActions from "./redemption-actions";
+import styles from "./admin.module.css";
 
-export default function AdminPage() {
-  return <main className="admin-shell"><aside><p className="admin-brand">Bionda <i>y</i> Mora</p><span>ADMINISTRACIÓN DEL CLUB</span><nav><b>Resumen</b><a href="#recompensas">Recompensas</a><a href="#misiones">Misiones</a><a href="#miembros">Miembros</a><a href="#integraciones">Integraciones</a></nav></aside><section><header><div><p>ADMINISTRACIÓN</p><h1>Hola, equipo.</h1></div><button>+ Nueva recompensa</button></header><div className="admin-metrics">{metrics.map(metric => <article key={metric.label}><p>{metric.label}</p><strong>{metric.value}</strong><span>{metric.change}</span></article>)}</div><section className="admin-panel" id="recompensas"><div><p>RECOMPENSAS</p><h2>Canjes por gestionar</h2></div><table><thead><tr><th>Miembro</th><th>Recompensa</th><th>Fecha</th><th>Estado</th></tr></thead><tbody><tr><td>María C.</td><td>Kit de cuidado</td><td>Hoy, 10:30</td><td><span className="status">Pendiente</span></td></tr><tr><td>Daniela R.</td><td>Envío sin costo</td><td>Ayer, 17:20</td><td><span className="status">Pendiente</span></td></tr></tbody></table></section><section className="admin-panel" id="integraciones"><div><p>INTEGRACIONES</p><h2>Estado de conexión</h2></div><div className="admin-integrations"><article><b>Shopify</b><span>Configura credenciales en Vercel</span></article><article><b>Supabase</b><span>Aplica migraciones y activa Auth</span></article><article><b>Omnisend</b><span>Conecta la API y activa flujos</span></article></div></section></section></main>;
+type Redemption = { id: string; created_at: string; customer_profiles: { email: string } | null; rewards: { title: string } | null };
+
+export default async function AdminPage() {
+  const sessionClient = await createServerSupabaseClient();
+  const { data: { user } } = await sessionClient.auth.getUser();
+  if (!user) redirect("/login?next=/admin" as never);
+  const admin = createAdminClient();
+  const { data: allowed } = await admin.rpc("is_admin", { p_user_id: user.id });
+  if (!allowed) redirect("/club" as never);
+  const [{ count: members }, { count: pending }, { data }] = await Promise.all([
+    admin.from("loyalty_accounts").select("id", { count: "exact", head: true }),
+    admin.from("reward_redemptions").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    admin.from("reward_redemptions").select("id,created_at,customer_profiles(email),rewards(title)").eq("status", "pending").order("created_at", { ascending: false }).limit(20)
+  ]);
+  const redemptions = (data ?? []) as unknown as Redemption[];
+  return <main className={styles.page}>
+    <aside><a href="/landing" className={styles.brand}>Bionda <i>y</i> Mora</a><span>ADMINISTRACIÓN DEL CLUB</span><nav><b>Resumen</b><a href="#canjes">Canjes</a><a href="#integraciones">Integraciones</a><a href="/club">Vista de clienta ↗</a></nav></aside>
+    <section className={styles.content}>
+      <header><div><p>OPERACIÓN · BETA</p><h1>Hola, equipo.</h1></div><a className={styles.back} href="/club">Ir al Club ↗</a></header>
+      <div className={styles.metrics}><article><p>MIEMBROS ACTIVOS</p><strong>{(members ?? 0).toLocaleString("es-CO")}</strong><span>Cuentas del Club</span></article><article><p>CANJES PENDIENTES</p><strong>{(pending ?? 0).toLocaleString("es-CO")}</strong><span>Requieren gestión</span></article><article><p>ESTADO</p><strong>Beta</strong><span>Operación controlada</span></article></div>
+      <section className={styles.panel} id="canjes"><div><p>RECOMPENSAS</p><h2>Canjes por gestionar</h2></div><div className={styles.tableWrap}><table><thead><tr><th>Miembro</th><th>Recompensa</th><th>Fecha</th><th>Acción</th></tr></thead><tbody>{redemptions.length ? redemptions.map((redemption) => <tr key={redemption.id}><td>{redemption.customer_profiles?.email ?? "Miembro"}</td><td>{redemption.rewards?.title ?? "Recompensa"}</td><td>{new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" }).format(new Date(redemption.created_at))}</td><td><RedemptionActions redemptionId={redemption.id} /></td></tr>) : <tr><td colSpan={4}>No hay canjes pendientes.</td></tr>}</tbody></table></div></section>
+      <section className={styles.panel} id="integraciones"><div><p>INTEGRACIONES</p><h2>Estado de conexión</h2></div><div className={styles.integrations}><article><b>Shopify</b><span>Webhook firmado e idempotente listo para activar.</span></article><article><b>Supabase</b><span>Auth, RLS, roles y ledger transaccional activos.</span></article><article><b>Omnisend</b><span>Outbox con reintentos; configurar clave antes de enviar.</span></article></div></section>
+    </section>
+  </main>;
 }
