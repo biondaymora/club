@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nextReward, recommendedMission, rewardGap, type Mission, type Reward } from "./club-journey";
+import { actionCategories, demoExtraMissions, missionGuide, nextReward, recommendedMission, rewardGap, type Mission, type Reward } from "./club-journey";
 
 const rewards: Reward[] = [
   { id: "cashback", code: "cashback_50000", title: "Cashback", description: "", points_cost: 1500, stock: null },
@@ -23,5 +23,14 @@ describe("camino y beneficios", () => {
       { id: "care", code: "CARE_CARD", title: "Cuidado", description: "", points_reward: 50, pending: true }
     ];
     expect(recommendedMission(missions)?.id).toBe("story");
+  });
+
+  it("mantiene categorías abiertas y acciones demo con reglas explícitas", () => {
+    expect(actionCategories.map(category => category.id)).toEqual(["elige", "comparte", "invita", "encuentros"]);
+    expect(demoExtraMissions.map(mission => missionGuide(mission.code).category)).toEqual(["elige", "comparte", "comparte", "comparte", "invita", "encuentros"]);
+    expect(demoExtraMissions.every(mission => missionGuide(mission.code).repeatable)).toBe(true);
+    expect(missionGuide("FAIR_VISIT").requiresEvent).toBe(true);
+    expect(missionGuide("WELCOME_PROFILE").repeatable).toBe(false);
+    expect(missionGuide("HONEST_REVIEW").frequency).toContain("compra distinta");
   });
 });

@@ -15,6 +15,14 @@ El banco nace de atributos que Bionda y Mora comunica hoy: cuero legítimo hecho
 - El cashback se concede como saldo promocional, con vigencia, mínimo de compra y exclusiones visibles antes de activarlo.
 - Moderar contenido y reseñas de manera transparente: una opinión honesta vale tanto si es crítica como si es favorable.
 
+## Experiencia visual actual y límite antes de la beta
+
+La pantalla muestra **todas las acciones desde el inicio**, agrupadas por intención (elegir/cuidar, crear/contar, invitar y encontrarnos). La ruta de cuatro etapas es una sugerencia; no desbloquea ni bloquea el banco. La demo permite repetir acciones de ejemplo un número acotado de veces por visita para enseñar la experiencia, pero no envía evidencia ni otorga puntos reales. Puntajes, topes y beneficios visibles son propuestas sujetas a aprobación comercial.
+
+Las reglas de repetición propuestas son: un pedido diferente para cada recompra; una compra o pieza diferente y contenido original para reseñas, videos y testimonios; una amiga distinta con primera compra validada para referidos; consentimiento verificable de la autora para testimonios de amigas; y una visita confirmada por evento para ferias. Nunca se paga por compartir un enlace, una reseña positiva o publicar en redes sin validación.
+
+**No habilitar repeticiones reales con la tabla actual:** `mission_progress` permite una sola fila por `(mission_id, customer_id)`. Antes de lanzar a clientas, añadir una instancia verificable por pedido, pieza, amiga o evento; claves de idempotencia, topes por ventana, detección de duplicados, revisión humana y entradas de ledger reversibles ante devoluciones. Los formularios reales de reseña/historia siguen limitados a una primera participación hasta completar esa ampliación.
+
 ## Acciones de bienvenida y relación
 
 | Código | Invitación a la clienta | Resultado de negocio | Incentivo inicial | Validación |

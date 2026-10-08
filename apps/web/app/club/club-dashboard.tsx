@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "../../lib/supabase/browser";
-import { journeyStages, missionGuide, nextReward, recommendedMission, rewardGap, type Mission, type Reward, type StageId } from "./club-journey";
+import { actionCategories, demoExtraMissions, journeyStages, missionGuide, nextReward, recommendedMission, rewardGap, type ActionCategory, type Mission, type Reward, type StageId } from "./club-journey";
 import styles from "./club-dashboard.module.css";
 import experience from "./club-experience.module.css";
 
@@ -19,8 +19,11 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
   const [ledgerEntries, setLedgerEntries] = useState(ledger);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState<string | null>(null);
-  const [stageFilter, setStageFilter] = useState<StageId | "todas">("todas");
+  const [categoryFilter, setCategoryFilter] = useState<ActionCategory | "todas">("todas");
+  const [stageFilter, setStageFilter] = useState<StageId | null>(null);
   const [openMission, setOpenMission] = useState<string | null>(null);
+  const [showCompleted, setShowCompleted] = useState(false);
+  const [demoCompletions, setDemoCompletions] = useState<Record<string, number>>({});
   const [demoRedemptions, setDemoRedemptions] = useState<string[]>([]);
   const [submittedMissions, setSubmittedMissions] = useState<string[]>([]);
   const [evidenceUrl, setEvidenceUrl] = useState("");
@@ -29,24 +32,52 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
   const [consentMessage, setConsentMessage] = useState("");
   const [savingConsent, setSavingConsent] = useState(false);
 
-  const suggestedMission = recommendedMission(missions);
+  const allMissions = demo ? [...missions, ...demoExtraMissions] : missions;
+  const isCompleted = (mission: Mission) => Boolean(mission.completed || demoCompletions[mission.id]);
+  const suggestedMission = recommendedMission(allMissions.map(mission => ({ ...mission, completed: isCompleted(mission) })));
   const upcomingReward = nextReward(rewards, balance);
   const availableRewards = (demo || redemptionsEnabled) ? rewards.filter(reward => reward.stock !== 0 && reward.points_cost <= balance).length : 0;
-  const visibleMissions = missions.filter(mission => stageFilter === "todas" || missionGuide(mission.code).stage === stageFilter);
-  const completedCount = missions.filter(mission => mission.completed).length;
+  const categoryMissions = allMissions.filter(mission => stageFilter ? missionGuide(mission.code).stage === stageFilter : categoryFilter === "todas" || missionGuide(mission.code).category === categoryFilter);
+  const completedSingleCount = categoryMissions.filter(mission => isCompleted(mission) && !missionGuide(mission.code).repeatable).length;
+  const visibleMissions = categoryMissions.filter(mission => showCompleted || !isCompleted(mission) || missionGuide(mission.code).repeatable)
+    .sort((a, b) => Number(isCompleted(a)) - Number(isCompleted(b)));
+  const completedCount = allMissions.filter(isCompleted).length;
   const tierName = account?.tier_code === "member" ? "Esencia" : account?.tier_code ?? "Esencia";
-  const activeStageIndex = journeyStages.findIndex(stage => missions.some(mission => missionGuide(mission.code).stage === stage.id && !mission.completed));
+  const activeStageIndex = suggestedMission ? journeyStages.findIndex(stage => stage.id === missionGuide(suggestedMission.code).stage) : -1;
+
+  useEffect(() => {
+    if (openMission) document.getElementById(`action-${openMission}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [openMission, categoryFilter, stageFilter]);
+
+  function selectCategory(category: ActionCategory | "todas") {
+    setCategoryFilter(category);
+    setStageFilter(null);
+    setOpenMission(null);
+    document.getElementById("acciones")?.scrollIntoView({ behavior: "smooth" });
+  }
 
   function viewStage(stage: StageId) {
     setStageFilter(stage);
+    setCategoryFilter("todas");
+    setOpenMission(null);
     document.getElementById("acciones")?.scrollIntoView({ behavior: "smooth" });
   }
 
   function showMission(mission: Mission) {
-    setStageFilter(missionGuide(mission.code).stage);
+    setCategoryFilter(missionGuide(mission.code).category);
+    setStageFilter(null);
     setOpenMission(mission.id);
     setMissionMessage("");
-    document.getElementById("acciones")?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function simulateAction(mission: Mission) {
+    const guide = missionGuide(mission.code);
+    const completedTimes = demoCompletions[mission.id] ?? 0;
+    if (!demo || guide.requiresEvent || (isCompleted(mission) && !guide.repeatable) || completedTimes >= (guide.demoLimit ?? 1)) return;
+    setDemoCompletions(current => ({ ...current, [mission.id]: (current[mission.id] ?? 0) + 1 }));
+    setBalance(current => current + mission.points_reward);
+    setLedgerEntries(current => [{ id: `demo-action-${mission.id}-${completedTimes + 1}`, event_type: "earn", amount: mission.points_reward, occurred_at: new Date().toISOString(), metadata: { mission_code: mission.code } }, ...current]);
+    setMissionMessage(`Simulación registrada: +${points(mission.points_reward)} puntos de ejemplo. Ninguna participación ni evidencia se envió al equipo.`);
   }
 
   async function submitMission(event: FormEvent<HTMLFormElement>, mission: Mission) {
@@ -124,21 +155,26 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
   return <main className={styles.page}>
     <header className={styles.topbar}>
       <a href="/" className={styles.brand}>Bionda <i>y</i> Mora</a>
-      <nav aria-label="Secciones del Club"><a href="#camino">Mi camino</a><a href="#acciones">Acciones</a><a href="#recompensas">Beneficios</a></nav>
+      <nav aria-label="Secciones del Club"><a href="#acciones">Qué puedo hacer</a><a href="#recompensas">Recompensas</a><a href="#camino">Ruta sugerida</a></nav>
       <div className={styles.member}><span>{user.name?.split(" ")[0] ?? user.email}</span><button type="button" onClick={signOut}>{demo ? "Editar datos" : "Cerrar sesión"}</button></div>
     </header>
 
-    <section className={styles.hero}>
-      <div><p className={styles.eyebrow}>CLUB BIONDA Y MORA {demo ? "· VISTA PREVIA" : ""}</p><h1>Hola, {user.name?.split(" ")[0] ?? "bienvenida"}.<br /><em>Cada paso cuenta.</em></h1><p>Descubre qué puedes hacer hoy y los beneficios que ya están a tu alcance.</p></div>
-      <div className={styles.balance}><span>{demo ? "SALDO DE EJEMPLO" : "PUNTOS DISPONIBLES"}</span><strong>{points(balance)}</strong><small>Tu nivel: {tierName}{demo ? " · simulación" : ""}</small><a href="#recompensas">{!demo && !redemptionsEnabled ? "Beneficios en preparación" : availableRewards > 0 ? `${availableRewards} ${availableRewards === 1 ? "beneficio para explorar" : "beneficios para explorar"}` : "Explorar beneficios"} ↗</a></div>
+    <section className={experience.welcome}>
+      <div className={experience.welcomeCopy}><p className={styles.eyebrow}>CLUB BIONDA Y MORA {demo ? "· DEMO" : ""}</p><h1>Hola, {user.name?.split(" ")[0] ?? "bienvenida"}.<br /><em>Este espacio es tuyo.</em></h1><p>Elige lo que te nace hacer hoy. La ruta te orienta, pero todas las acciones están a tu alcance sin seguir un orden.</p><a href="#acciones" className={experience.welcomeLink}>Explorar todas las acciones ↗</a></div>
+      <div className={experience.wallet}><span>{demo ? "SALDO DE EJEMPLO" : "MIS PUNTOS"}</span><strong>{points(balance)}</strong><small>Nivel {tierName}{demo ? " · simulación" : ""}</small><a href="#recompensas">{!demo && !redemptionsEnabled ? "Beneficios en preparación" : availableRewards > 0 ? `${availableRewards} ${availableRewards === 1 ? "recompensa a tu alcance" : "recompensas a tu alcance"}` : "Ver recompensas"} ↗</a></div>
     </section>
 
     {demo && <p className={styles.previewNotice}>Estás explorando una demo: no se crean puntos, compras ni canjes reales. <a href="/admin/demo">Ver vista del equipo ↗</a></p>}
     {!demo && <section className={styles.consentNotice} aria-label="Preferencias de correo"><div><strong>Correos del Club</strong><p>Elige si quieres recibir por correo avisos sobre tus puntos, acciones y recompensas. Puedes cambiarlo aquí cuando quieras; no autoriza campañas generales ni la reutilización de tu contenido.</p>{consentMessage && <small role="status">{consentMessage}</small>}</div><button type="button" disabled={savingConsent} onClick={changeEmailConsent}>{savingConsent ? "Guardando…" : wantsEmail ? "Desactivar correos" : "Activar correos del Club"}</button></section>}
 
-    <section className={styles.overview} aria-label="Tu siguiente paso y próxima recompensa">
+    <section className={experience.choiceSection} aria-labelledby="choice-title">
+      <div className={experience.choiceHeading}><div><p className={styles.eyebrow}>TU CLUB, A TU MANERA</p><h2 id="choice-title">¿Qué te gustaría hacer?</h2><p>Puedes volver a estas opciones cuando quieras. Las que se repiten muestran sus condiciones antes de participar.</p></div><a href="#camino">Prefiero una ruta sugerida ↗</a></div>
+      <div className={experience.choiceGrid}>{actionCategories.map(category => <button type="button" key={category.id} onClick={() => selectCategory(category.id)}><span>{category.title}</span><small>{category.description}</small><b aria-hidden="true">↗</b></button>)}</div>
+    </section>
+
+    <section className={`${styles.overview} ${experience.overview}`} aria-label="Una sugerencia y tu próxima recompensa">
       <article className={styles.nextAction}>
-        <div className={styles.nextActionCopy}><p className={styles.eyebrow}>TU SIGUIENTE PASO</p><h2>{suggestedMission?.title ?? "Elige tu próximo gesto"}</h2><p>{suggestedMission?.description ?? "Explora las formas de participar en el Club a tu ritmo."}</p><div className={styles.actionBottom}><span>{suggestedMission ? `+${points(suggestedMission.points_reward)} puntos al validarse` : "Tú eliges cómo participar"}</span><button type="button" onClick={() => suggestedMission ? showMission(suggestedMission) : document.getElementById("acciones")?.scrollIntoView({ behavior: "smooth" })}>{suggestedMission ? "Ver cómo hacerlo" : "Ver acciones"} ↗</button></div></div>
+        <div className={styles.nextActionCopy}><p className={styles.eyebrow}>SI QUIERES UNA SUGERENCIA</p><h2>{suggestedMission?.title ?? "Elige tu próximo gesto"}</h2><p>{suggestedMission?.description ?? "Explora las formas de participar en el Club a tu ritmo."}</p><div className={styles.actionBottom}><span>{suggestedMission ? `+${points(suggestedMission.points_reward)} puntos al validarse` : "Tú eliges cómo participar"}</span><button type="button" onClick={() => suggestedMission ? showMission(suggestedMission) : document.getElementById("acciones")?.scrollIntoView({ behavior: "smooth" })}>{suggestedMission ? "Explorar esta acción" : "Ver acciones"} ↗</button></div></div>
         <div className={styles.nextActionImage}><Image src="/brand/look.jpg" alt="Estilo Bionda y Mora" fill sizes="(max-width: 760px) 100vw, 280px" /></div>
       </article>
       <article className={styles.nextReward}>
@@ -148,32 +184,47 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
       </article>
     </section>
 
-    <section id="camino" className={styles.section}>
-      <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>TU CAMINO</p><h2>Así puedes vivir el Club.</h2><p>Una ruta para orientarte, sin plazos ni tareas obligatorias.</p></div>{missions.length > 0 && <span>{completedCount} de {missions.length} acciones completadas</span>}</div>
-      {missions.length > 0 && <div className={experience.passport}><div><strong>Tu pasaporte de gestos</strong><span>Ya exploraste {completedCount} {completedCount === 1 ? "acción" : "acciones"}. Elige la próxima a tu ritmo.</span></div><progress value={completedCount} max={missions.length} aria-label={`Progreso del camino: ${completedCount} de ${missions.length} acciones completadas`} /></div>}
-      {missions.length > 0 ? <ol className={styles.path}>{journeyStages.map(stage => {
-        const stageMissions = missions.filter(mission => missionGuide(mission.code).stage === stage.id);
-        const done = stageMissions.filter(mission => mission.completed).length;
-        const stageIndex = journeyStages.findIndex(item => item.id === stage.id);
-        const status = stageMissions.length > 0 && done === stageMissions.length ? "Explorada" : stageIndex === activeStageIndex ? "Estás aquí" : "Por descubrir";
-        return <li key={stage.id}><button className={stageIndex === activeStageIndex ? experience.currentStage : undefined} type="button" onClick={() => viewStage(stage.id)} aria-label={`Ver acciones de ${stage.title}: ${status}`} aria-current={stageIndex === activeStageIndex ? "step" : undefined}><span className={styles.pathNumber}>{stage.number}</span><span className={styles.pathCopy}><span className={experience.stageStatus}>{status}</span><strong>{stage.title}</strong><small>{stage.description}</small><span className={experience.stageBenefit}>✦ {stage.benefit}</span><em>{stageMissions.length ? `${done} de ${stageMissions.length} ${stageMissions.length === 1 ? "acción completada" : "acciones completadas"}` : "Explora esta etapa"}</em></span><span className={styles.pathArrow} aria-hidden="true">↗</span></button></li>;
-      })}</ol> : <p className={styles.empty}>Estamos preparando las próximas acciones del Club.</p>}
-    </section>
-
-    <section id="acciones" className={styles.section}>
-      <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>FORMAS DE SUMAR</p><h2>Acciones claras, a tu ritmo.</h2><p>Abre una acción para conocer qué hacer y cuándo se acreditan los puntos.</p></div></div>
-      <div className={styles.filters} aria-label="Filtrar acciones"><button type="button" aria-pressed={stageFilter === "todas"} onClick={() => setStageFilter("todas")}>Todas</button>{journeyStages.map(stage => <button key={stage.id} type="button" aria-pressed={stageFilter === stage.id} onClick={() => setStageFilter(stage.id)}>{stage.title}</button>)}</div>
-      {visibleMissions.length ? <div className={styles.missionList}>{visibleMissions.map(mission => {
+    <section id="acciones" className={`${styles.section} ${experience.actionsSection}`}>
+      <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>BANCO DE ACCIONES</p><h2>Todo lo que puedes hacer.</h2><p>Elige libremente; una acción repetible solo vuelve a sumar cuando aporta una compra, historia, amiga o visita nueva y validada.</p></div><span>{allMissions.length} posibilidades para explorar</span></div>
+      <div className={experience.howItWorks}><span><b>1.</b> Elige lo que te gusta</span><span><b>2.</b> Conoce la regla</span><span><b>3.</b> Recibe puntos tras validación</span></div>
+      <div className={styles.filters} aria-label="Filtrar acciones"><button type="button" aria-pressed={!stageFilter && categoryFilter === "todas"} onClick={() => selectCategory("todas")}>Todas</button>{actionCategories.map(category => <button key={category.id} type="button" aria-pressed={!stageFilter && categoryFilter === category.id} onClick={() => selectCategory(category.id)}>{category.title}</button>)}</div>
+      {stageFilter && <p className={experience.stageFilter}>Viendo la etapa «{journeyStages.find(stage => stage.id === stageFilter)?.title}». <button type="button" onClick={() => selectCategory("todas")}>Ver todas las acciones</button></p>}
+      {completedSingleCount > 0 && <button className={experience.completedToggle} type="button" aria-pressed={showCompleted} onClick={() => setShowCompleted(value => !value)}>{showCompleted ? "Ocultar acciones ya hechas" : `Ver ${completedSingleCount} ${completedSingleCount === 1 ? "acción ya hecha" : "acciones ya hechas"}`} ↗</button>}
+      {visibleMissions.length ? <div className={experience.actionGrid}>{visibleMissions.map(mission => {
         const guide = missionGuide(mission.code);
         const isOpen = openMission === mission.id;
-        const stage = journeyStages.find(item => item.id === guide.stage);
         const pending = mission.pending || submittedMissions.includes(mission.id);
-        const canSubmit = !demo && !mission.completed && !pending && ["HONEST_REVIEW", "REAL_WALK"].includes(mission.code.toUpperCase());
-        return <article className={styles.mission} key={mission.id}>
-          <div className={styles.missionMain}><div className={styles.missionIdentity}><span className={styles.missionStage}>{stage?.title} · {guide.time}</span><h3>{mission.title}</h3><p>{mission.description}</p></div><div className={styles.missionSide}><strong>+{points(mission.points_reward)} puntos</strong><span className={mission.completed ? styles.done : pending ? styles.pending : styles.explore}>{mission.completed ? "Completada" : pending ? "En revisión" : "Por explorar"}</span><button type="button" aria-expanded={isOpen} aria-controls={`mission-${mission.id}`} onClick={() => setOpenMission(isOpen ? null : mission.id)}>{isOpen ? "Cerrar detalles" : "Cómo sumar"} <span aria-hidden="true">{isOpen ? "−" : "+"}</span></button></div></div>
-          {isOpen && <div id={`mission-${mission.id}`} className={styles.missionDetails}><div><h4>Cómo participar</h4><ol>{guide.steps.map(step => <li key={step}>{step}</li>)}</ol></div><div><h4>Cuándo recibes los puntos</h4><p>{guide.validation}</p><small>{demo ? "Vista de prueba: explorar esta acción no acredita puntos reales." : pending ? "Tu enlace está en revisión; recarga la página para ver el resultado." : "El saldo cambia después de la validación."}</small>{canSubmit && <form className={styles.missionForm} onSubmit={event => submitMission(event, mission)}><label htmlFor={`evidence-${mission.id}`}>Enlace público de tu reseña o historia</label><input id={`evidence-${mission.id}`} type="url" placeholder="https://…" value={evidenceUrl} onChange={event => setEvidenceUrl(event.target.value)} required /><small>Requiere una compra vinculada al Club. Enviar el enlace no autoriza a la marca a reutilizar tu contenido.</small><button type="submit" disabled={loading !== null}>{loading === mission.id ? "Enviando…" : "Enviar para revisión ↗"}</button></form>}{missionMessage && <p role="status">{missionMessage}</p>}</div></div>}
+        const done = isCompleted(mission);
+        const demoCount = demoCompletions[mission.id] ?? 0;
+        const demoLimitReached = demoCount >= (guide.demoLimit ?? 1);
+        const canSimulate = demo && !guide.requiresEvent && !pending && (!done || guide.repeatable) && !demoLimitReached;
+        const canSubmit = !demo && !done && !pending && ["HONEST_REVIEW", "REAL_WALK"].includes(mission.code.toUpperCase());
+        const status = guide.requiresEvent ? "Cuando haya feria" : pending ? "En revisión" : demo && demoLimitReached ? "Muestra completada" : done && !guide.repeatable ? "Ya realizada" : done && guide.repeatable ? demo ? "Puedes repetir con novedad" : "Nueva participación por habilitar" : "Disponible para explorar";
+        return <article id={`action-${mission.id}`} className={experience.actionCard} key={mission.id}>
+          <div className={experience.actionCardHead}><span>{actionCategories.find(item => item.id === guide.category)?.title} · {guide.time}</span><span className={experience.actionStatus}>{status}</span></div>
+          <h3>{mission.title}</h3><p>{mission.description}</p>
+          <div className={experience.actionFacts}><span>+{points(mission.points_reward)} {demo ? "puntos de ejemplo" : "puntos"}</span><span>{guide.frequency}</span></div>
+          {demoCount > 0 && <small className={experience.demoCount}>Simulada {demoCount} de {guide.demoLimit ?? 1} {guide.demoLimit === 1 ? "vez" : "veces"} en esta visita de prueba.</small>}
+          <button className={experience.detailsButton} type="button" aria-expanded={isOpen} aria-controls={`mission-${mission.id}`} onClick={() => { setOpenMission(isOpen ? null : mission.id); setMissionMessage(""); }}>{isOpen ? "Cerrar detalles" : "Ver cómo participar"} <span aria-hidden="true">{isOpen ? "−" : "↗"}</span></button>
+          {isOpen && <div id={`mission-${mission.id}`} className={experience.actionDetails}><h4>Cómo participar</h4><ol>{guide.steps.map(step => <li key={step}>{step}</li>)}</ol><h4>Cuándo cuenta</h4><p>{guide.validation}</p><strong>Frecuencia: {guide.frequency}.</strong>
+            {demo && <div className={experience.demoAction}><small>Solo demostración: no enviamos datos ni otorgamos puntos reales. Las reglas y cantidades requieren aprobación antes de la beta.</small><button type="button" disabled={!canSimulate} onClick={() => simulateAction(mission)}>{guide.requiresEvent ? "Esperando fecha de feria" : demoLimitReached || (done && !guide.repeatable) ? "Muestra completada" : "Simular esta acción ↗"}</button></div>}
+            {canSubmit && <form className={styles.missionForm} onSubmit={event => submitMission(event, mission)}><label htmlFor={`evidence-${mission.id}`}>Enlace público de tu reseña o historia</label><input id={`evidence-${mission.id}`} type="url" placeholder="https://…" value={evidenceUrl} onChange={event => setEvidenceUrl(event.target.value)} required /><small>Requiere una compra vinculada al Club. Enviar el enlace no autoriza a reutilizar tu contenido.</small><button type="submit" disabled={loading !== null}>{loading === mission.id ? "Enviando…" : "Enviar para revisión ↗"}</button></form>}
+            {!demo && guide.repeatable && done && <small>Para acreditar una nueva participación necesitaremos habilitar la validación por compra, pieza, amiga o evento distinto.</small>}
+            {missionMessage && <p role="status">{missionMessage}</p>}
+          </div>}
         </article>;
-      })}</div> : <p className={styles.empty}>Aún no hay acciones en esta etapa. Puedes explorar las otras.</p>}
+      })}</div> : <p className={styles.empty}>No quedan acciones pendientes en esta categoría. Puedes ver las ya hechas o explorar otra opción.</p>}
+    </section>
+
+    <section id="camino" className={styles.section}>
+      <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>RUTA SUGERIDA</p><h2>Si quieres una guía, empieza aquí.</h2><p>Estas etapas no bloquean nada: puedes compartir, invitar o volver a elegir en cualquier momento.</p></div></div>
+      {allMissions.length > 0 && <div className={experience.routeLead}><strong>{completedCount > 0 ? `Ya exploraste ${completedCount} ${completedCount === 1 ? "gesto" : "gestos"}.` : "Tu camino empieza cuando tú quieras."}</strong><span>{suggestedMission ? `Nuestra sugerencia ahora: “${suggestedMission.title}”.` : "Puedes seguir descubriendo el Club a tu manera."}</span></div>}
+      {allMissions.length > 0 ? <ol className={styles.path}>{journeyStages.map((stage, stageIndex) => {
+        const stageMissions = allMissions.filter(mission => missionGuide(mission.code).stage === stage.id);
+        const done = stageMissions.filter(isCompleted).length;
+        const status = stageIndex === activeStageIndex ? "Sugerencia actual" : done > 0 ? "Ya exploraste" : "Siempre disponible";
+        return <li key={stage.id}><button className={stageIndex === activeStageIndex ? experience.currentStage : undefined} type="button" onClick={() => viewStage(stage.id)} aria-label={`Ver acciones de ${stage.title}: ${status}`}><span className={styles.pathNumber}>{stage.number}</span><span className={styles.pathCopy}><span className={experience.stageStatus}>{status}</span><strong>{stage.title}</strong><small>{stage.description}</small><span className={experience.stageBenefit}>{stage.benefit}</span><em>{done > 0 ? `${done} ${done === 1 ? "acción explorada" : "acciones exploradas"}` : "Ver acciones de esta etapa"}</em></span><span className={styles.pathArrow} aria-hidden="true">↗</span></button></li>;
+      })}</ol> : <p className={styles.empty}>Estamos preparando las próximas acciones del Club.</p>}
     </section>
 
     <section id="recompensas" className={styles.section}>
