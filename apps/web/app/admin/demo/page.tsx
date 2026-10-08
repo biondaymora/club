@@ -2,10 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { clubLiveEnabled } from "../../../lib/club-mode";
 import styles from "../admin.module.css";
+import layout from "../admin-layout.module.css";
 
 export default function AdminDemoPage() {
   if (clubLiveEnabled) redirect("/admin");
-  return <main className={styles.page}>
+  return <main className={`${styles.page} ${layout.page}`}>
     <aside>
       <Link href="/" className={styles.brand}>Bionda <i>y</i> Mora</Link>
       <span>ADMINISTRACIÓN · VISTA PREVIA</span>

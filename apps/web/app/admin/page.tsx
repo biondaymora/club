@@ -5,6 +5,7 @@ import RedemptionActions from "./redemption-actions";
 import MissionReviewActions from "./mission-review-actions";
 import { env } from "../../lib/env";
 import styles from "./admin.module.css";
+import layout from "./admin-layout.module.css";
 import { clubLiveEnabled } from "../../lib/club-mode";
 
 type Redemption = { id: string; created_at: string; customer_profiles: { email: string } | null; rewards: { title: string } | null };
@@ -28,7 +29,7 @@ export default async function AdminPage() {
   ]);
   const redemptions = (data ?? []) as unknown as Redemption[];
   const submissions = (submissionsData ?? []) as unknown as Submission[];
-  return <main className={styles.page}>
+  return <main className={`${styles.page} ${layout.page}`}>
     <aside><a href="/landing" className={styles.brand}>Bionda <i>y</i> Mora</a><span>ADMINISTRACIÓN DEL CLUB</span><nav><b>Resumen</b><a href="#canjes">Canjes</a><a href="#misiones">Participaciones</a><a href="#integraciones">Integraciones</a><a href="/club">Vista de clienta ↗</a></nav></aside>
     <section className={styles.content}>
       <header><div><p>OPERACIÓN · BETA</p><h1>Hola, equipo.</h1></div><a className={styles.back} href="/club">Ir al Club ↗</a></header>

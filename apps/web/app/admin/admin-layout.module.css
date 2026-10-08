@@ -1,0 +1,5 @@
+.page{max-width:100%;overflow-x:hidden}
+.page>section{min-width:0}
+.page header{flex-wrap:wrap}
+.page header a{white-space:normal!important}
+@media(max-width:800px){.page nav{grid-template-columns:repeat(2,minmax(0,1fr))}.page nav a{overflow-wrap:anywhere}}
