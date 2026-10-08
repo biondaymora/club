@@ -31,6 +31,7 @@ Nunca: tap de tag o visita web ──► puntos automáticos
 ```
 
 La URL de un chip **no inicia sesión, no identifica públicamente a la clienta y no concede puntos**. Un chip perdido o copiado debe poder revocarse y reemplazarse sin cambiar la cuenta. Si la clienta no ha iniciado sesión, verá el acceso al Club; tras autenticarse podrá ver su tarjeta. El tag no contiene email, celular, `customer_id`, saldo ni códigos de canje.
+Con consentimiento de analítica, la sesión autenticada podrá registrar que llegó desde NFC para medir retorno al sitio; antes de autenticarse solo se contará una apertura agregada. Ninguna de esas señales equivale a asistencia a feria ni a una acción premiable.
 
 ## Modelo de datos reservado
 
