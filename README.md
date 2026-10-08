@@ -18,6 +18,7 @@ Plataforma de fidelización conectada con Shopify, Supabase y Omnisend.
 Consulta [la arquitectura](docs/architecture/overview.md), las [reglas de producto](docs/product-rules/loyalty.md) y los [runbooks](docs/runbooks/README.md) antes de modificar reglas comerciales.
 
 El [estudio de experiencia del Club](docs/research/loyalty-ux-benchmark-2026-10.md) explica las decisiones de recorrido, acciones y recompensas con referencias de programas comparables.
+La [investigación de gamificación y UX para la siguiente versión](docs/research/club-gamification-ux-vnext-2026-10.md) y la [arquitectura de tarjeta digital/NFC/Wallet](docs/architecture/digital-membership.md) separan lo disponible en la demo de lo que requiere emisores, chips y validación real.
 
 ## Rutas principales
 

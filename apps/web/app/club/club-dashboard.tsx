@@ -155,13 +155,13 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
   return <main className={styles.page}>
     <header className={styles.topbar}>
       <a href="/" className={styles.brand}>Bionda <i>y</i> Mora</a>
-      <nav aria-label="Secciones del Club"><a href="#acciones">Qué puedo hacer</a><a href="#recompensas">Recompensas</a><a href="#camino">Ruta sugerida</a></nav>
+      <nav aria-label="Secciones del Club"><a href="#acciones">Qué puedo hacer</a><a href="#tarjeta">Mi tarjeta</a><a href="#recompensas">Recompensas</a><a href="#camino">Ruta sugerida</a></nav>
       <div className={styles.member}><span>{user.name?.split(" ")[0] ?? user.email}</span><button type="button" onClick={signOut}>{demo ? "Editar datos" : "Cerrar sesión"}</button></div>
     </header>
 
     <section className={experience.welcome}>
       <div className={experience.welcomeCopy}><p className={styles.eyebrow}>CLUB BIONDA Y MORA {demo ? "· DEMO" : ""}</p><h1>Hola, {user.name?.split(" ")[0] ?? "bienvenida"}.<br /><em>Este espacio es tuyo.</em></h1><p>Elige lo que te nace hacer hoy. La ruta te orienta, pero todas las acciones están a tu alcance sin seguir un orden.</p><a href="#acciones" className={experience.welcomeLink}>Explorar todas las acciones ↗</a></div>
-      <div className={experience.wallet}><span>{demo ? "SALDO DE EJEMPLO" : "MIS PUNTOS"}</span><strong>{points(balance)}</strong><small>Nivel {tierName}{demo ? " · simulación" : ""}</small><a href="#recompensas">{!demo && !redemptionsEnabled ? "Beneficios en preparación" : availableRewards > 0 ? `${availableRewards} ${availableRewards === 1 ? "recompensa a tu alcance" : "recompensas a tu alcance"}` : "Ver recompensas"} ↗</a></div>
+      <div className={experience.wallet}><span>{demo ? "MI CLUB · PUNTOS DE EJEMPLO" : "MI CLUB · PUNTOS CONFIRMADOS"}</span><strong>{points(balance)}</strong><small>Nivel {tierName}{demo ? " · simulación" : ""}</small><a href="#tarjeta">Conocer mi tarjeta digital ↗</a><a href="#recompensas">{!demo && !redemptionsEnabled ? "Beneficios en preparación" : availableRewards > 0 ? `${availableRewards} ${availableRewards === 1 ? "recompensa a tu alcance" : "recompensas a tu alcance"}` : "Ver recompensas"} ↗</a></div>
     </section>
 
     {demo && <p className={styles.previewNotice}>Estás explorando una demo: no se crean puntos, compras ni canjes reales. <a href="/admin/demo">Ver vista del equipo ↗</a></p>}
@@ -170,6 +170,22 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
     <section className={experience.choiceSection} aria-labelledby="choice-title">
       <div className={experience.choiceHeading}><div><p className={styles.eyebrow}>TU CLUB, A TU MANERA</p><h2 id="choice-title">¿Qué te gustaría hacer?</h2><p>Puedes volver a estas opciones cuando quieras. Las que se repiten muestran sus condiciones antes de participar.</p></div><a href="#camino">Prefiero una ruta sugerida ↗</a></div>
       <div className={experience.choiceGrid}>{actionCategories.map(category => <button type="button" key={category.id} onClick={() => selectCategory(category.id)}><span>{category.title}</span><small>{category.description}</small><b aria-hidden="true">↗</b></button>)}</div>
+    </section>
+
+    <section id="tarjeta" className={experience.memberCardSection} aria-labelledby="member-card-title">
+      <div className={experience.memberCardVisual} role="group" aria-label={demo ? "Tarjeta digital de muestra" : "Vista de la futura tarjeta digital"}>
+        <span>CLUB BIONDA Y MORA</span>
+        <strong>{user.name?.split(" ")[0] ?? "Integrante del Club"}</strong>
+        <small>{demo ? "Tarjeta de muestra" : "Emisión todavía no disponible"}</small>
+        <div><span>NIVEL</span><b>{tierName}</b><span>{demo ? "SIN VALIDEZ PARA CANJES" : "PRÓXIMAMENTE"}</span></div>
+      </div>
+      <div className={experience.memberCardCopy}>
+        <p className={styles.eyebrow}>TU IDENTIDAD EN EL CLUB</p>
+        <h2 id="member-card-title">Un vínculo que va contigo.</h2>
+        <p>Esta es una vista de cómo se sentirá tu tarjeta digital. Más adelante podrás entrar al Club al tocar tu chip NFC y guardar un pase en Apple Wallet o Google Wallet.</p>
+        <ul><li>La web conserva tus puntos y recompensas confirmados.</li><li>El chip solo abre el Club; no inicia sesión ni suma puntos.</li><li>Los pases de Wallet llegarán cuando la emisión esté habilitada.</li></ul>
+        <div className={experience.walletComing}><span>Apple Wallet · próximamente</span><span>Google Wallet · próximamente</span></div>
+      </div>
     </section>
 
     <section className={`${styles.overview} ${experience.overview}`} aria-label="Una sugerencia y tu próxima recompensa">

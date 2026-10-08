@@ -64,6 +64,20 @@
 .routeLead strong{font:400 19px var(--bm-serif),Georgia,serif;color:#4a311d}
 .stageFilter{background:#eee5d9;color:#604b3a;font-size:11px;line-height:1.4;padding:12px 16px;margin:0 0 16px}
 .stageFilter button{border:0;background:none;color:#4a311d;text-decoration:underline;text-underline-offset:3px;font-size:11px;padding:0 0 0 3px}
+.memberCardSection{max-width:1280px;margin:0 auto;padding:42px 24px 0;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:28px;align-items:center;scroll-margin-top:24px}
+.memberCardVisual{min-height:272px;background:linear-gradient(135deg,#3b291c,#765337);color:#fff7ed;border:1px solid #a57f5e;padding:27px;display:flex;flex-direction:column;box-shadow:0 15px 30px #3b291c18}
+.memberCardVisual>span{font-size:10px;letter-spacing:2px;color:#efcfb1}
+.memberCardVisual>strong{font:400 clamp(34px,4vw,51px)/1 var(--bm-serif),Georgia,serif;margin:auto 0 8px;letter-spacing:-1px}
+.memberCardVisual>small{font-size:11px;color:#ead6c3}
+.memberCardVisual>div{border-top:1px solid #dfbd9b80;margin-top:24px;padding-top:13px;display:flex;align-items:center;gap:10px}
+.memberCardVisual>div span{font-size:9px;letter-spacing:1px;color:#eac9aa}
+.memberCardVisual>div b{font:400 18px var(--bm-serif),Georgia,serif;margin-right:auto}
+.memberCardCopy h2{font:400 clamp(31px,3.3vw,43px)/1.04 var(--bm-serif),Georgia,serif;letter-spacing:-1px;margin:0}
+.memberCardCopy>p:not(.eyebrow){font-size:12px;line-height:1.55;color:#716255;max-width:550px;margin:14px 0}
+.memberCardCopy ul{margin:0;padding-left:18px;color:#5e4c3e;font-size:11px;line-height:1.6}
+.memberCardCopy li{margin:4px 0}
+.walletComing{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.walletComing span{display:inline-block;background:#eee6dc;border:1px solid #d7c8b8;color:#6d5948;padding:10px 12px;font-size:10px}
 @media(max-width:980px){.choiceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){
   .welcome{grid-template-columns:1fr;min-height:0;gap:18px;padding:26px 20px 24px}
@@ -89,4 +103,7 @@
   .actionCard{padding:21px}
   .actionDetails{margin:16px -21px -21px;padding:21px}
   .routeLead{display:grid;gap:7px}
+  .memberCardSection{grid-template-columns:1fr;padding:31px 20px 0;gap:22px}
+  .memberCardVisual{min-height:230px;padding:22px}
+  .memberCardCopy h2{font-size:32px}
 }

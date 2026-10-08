@@ -45,3 +45,13 @@
 - [ ] Shopify y Omnisend se prueban primero con datos de prueba; no habilitar campañas automáticas antes de validar consentimiento.
 - [ ] El banco real solo muestra recompensas entregables y sus términos/stock fueron aprobados. Cashback sigue desactivado hasta conectar emisión y reversos.
 - [ ] Se publicó la política de tratamiento de datos y términos del Club aprobados por la marca; los registros de consentimiento son verificables.
+
+## Tarjeta digital, NFC y Wallet (fase posterior; no bloquea la beta sin estos canales)
+
+- [ ] `member_cards` se emiten solo a cuentas autenticadas; RLS, revocación y eliminación de cuenta probadas.
+- [ ] URL de tag sin PII ni sesión, token aleatorio, hash en base de datos, revocación, redirección segura y prueba de copia/pérdida.
+- [ ] Taps y aperturas de página no acreditan puntos ni se presentan como visitas físicas.
+- [ ] Check-in de feria exige operador, evento válido, clave idempotente y prueba de duplicado/reintento.
+- [ ] Apple Pass Type ID/certificado y Google Wallet issuer de prueba separados de producción; emisión y actualización ensayadas con dispositivos reales.
+- [ ] Si se desea NFC desde Wallet, lectores VAS/Smart Tap certificados, software y operación confirmados antes de prometerlo.
+- [ ] Certificados, llaves, tokens y datos de clientas ausentes del repositorio, URL, analítica y logs.
