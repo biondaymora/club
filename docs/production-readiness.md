@@ -2,6 +2,7 @@
 
 ## Plataforma
 
+- [ ] `NEXT_PUBLIC_CLUB_MODE` sigue en `preview` durante pruebas visuales; cambiar a `live` solo después de completar los puntos de datos, seguridad, negocio y operación de este checklist.
 - [ ] Proyecto Vercel conectado a `main`, previews activados y dominio configurado.
 - [ ] Variables de cada entorno cargadas y validadas al arrancar.
 - [ ] El archivo de bloqueo de dependencias está versionado y CI usa `npm ci`.

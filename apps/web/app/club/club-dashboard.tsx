@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import { createBrowserSupabaseClient } from "../../lib/supabase/browser";
 import { journeyStages, missionGuide, nextReward, recommendedMission, rewardGap, type Mission, type Reward, type StageId } from "./club-journey";
 import styles from "./club-dashboard.module.css";
+import experience from "./club-experience.module.css";
 
 type Ledger = { id: string; event_type: string; amount: number; occurred_at: string; metadata: Record<string, unknown> };
 type Member = { id: string; email: string; name?: string };
@@ -34,6 +35,7 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
   const visibleMissions = missions.filter(mission => stageFilter === "todas" || missionGuide(mission.code).stage === stageFilter);
   const completedCount = missions.filter(mission => mission.completed).length;
   const tierName = account?.tier_code === "member" ? "Esencia" : account?.tier_code ?? "Esencia";
+  const activeStageIndex = journeyStages.findIndex(stage => missions.some(mission => missionGuide(mission.code).stage === stage.id && !mission.completed));
 
   function viewStage(stage: StageId) {
     setStageFilter(stage);
@@ -128,10 +130,10 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
 
     <section className={styles.hero}>
       <div><p className={styles.eyebrow}>CLUB BIONDA Y MORA {demo ? "· VISTA PREVIA" : ""}</p><h1>Hola, {user.name?.split(" ")[0] ?? "bienvenida"}.<br /><em>Cada paso cuenta.</em></h1><p>Descubre qué puedes hacer hoy y los beneficios que ya están a tu alcance.</p></div>
-      <div className={styles.balance}><span>PUNTOS DISPONIBLES</span><strong>{points(balance)}</strong><small>Tu nivel: {tierName}</small><a href="#recompensas">{!demo && !redemptionsEnabled ? "Beneficios en preparación" : availableRewards > 0 ? `${availableRewards} ${availableRewards === 1 ? "beneficio disponible" : "beneficios disponibles"}` : "Explorar beneficios"} ↗</a></div>
+      <div className={styles.balance}><span>{demo ? "SALDO DE EJEMPLO" : "PUNTOS DISPONIBLES"}</span><strong>{points(balance)}</strong><small>Tu nivel: {tierName}{demo ? " · simulación" : ""}</small><a href="#recompensas">{!demo && !redemptionsEnabled ? "Beneficios en preparación" : availableRewards > 0 ? `${availableRewards} ${availableRewards === 1 ? "beneficio para explorar" : "beneficios para explorar"}` : "Explorar beneficios"} ↗</a></div>
     </section>
 
-    {demo && <p className={styles.previewNotice}>Vista de prueba: el saldo, los avances y los canjes son ilustrativos. <a href="/login?next=/club">Activar mi cuenta con un enlace seguro ↗</a></p>}
+    {demo && <p className={styles.previewNotice}>Estás explorando una demo: no se crean puntos, compras ni canjes reales. <a href="/admin/demo">Ver vista del equipo ↗</a></p>}
     {!demo && <section className={styles.consentNotice} aria-label="Preferencias de correo"><div><strong>Correos del Club</strong><p>Elige si quieres recibir por correo avisos sobre tus puntos, acciones y recompensas. Puedes cambiarlo aquí cuando quieras; no autoriza campañas generales ni la reutilización de tu contenido.</p>{consentMessage && <small role="status">{consentMessage}</small>}</div><button type="button" disabled={savingConsent} onClick={changeEmailConsent}>{savingConsent ? "Guardando…" : wantsEmail ? "Desactivar correos" : "Activar correos del Club"}</button></section>}
 
     <section className={styles.overview} aria-label="Tu siguiente paso y próxima recompensa">
@@ -148,10 +150,13 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
 
     <section id="camino" className={styles.section}>
       <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>TU CAMINO</p><h2>Así puedes vivir el Club.</h2><p>Una ruta para orientarte, sin plazos ni tareas obligatorias.</p></div>{missions.length > 0 && <span>{completedCount} de {missions.length} acciones completadas</span>}</div>
+      {missions.length > 0 && <div className={experience.passport}><div><strong>Tu pasaporte de gestos</strong><span>Ya exploraste {completedCount} {completedCount === 1 ? "acción" : "acciones"}. Elige la próxima a tu ritmo.</span></div><progress value={completedCount} max={missions.length} aria-label={`Progreso del camino: ${completedCount} de ${missions.length} acciones completadas`} /></div>}
       {missions.length > 0 ? <ol className={styles.path}>{journeyStages.map(stage => {
         const stageMissions = missions.filter(mission => missionGuide(mission.code).stage === stage.id);
         const done = stageMissions.filter(mission => mission.completed).length;
-        return <li key={stage.id}><button type="button" onClick={() => viewStage(stage.id)} aria-label={`Ver acciones de ${stage.title}`}><span className={styles.pathNumber}>{stage.number}</span><span className={styles.pathCopy}><strong>{stage.title}</strong><small>{stage.description}</small><em>{stageMissions.length ? `${done} de ${stageMissions.length} ${stageMissions.length === 1 ? "acción completada" : "acciones completadas"}` : "Explora esta etapa"}</em></span><span className={styles.pathArrow} aria-hidden="true">↗</span></button></li>;
+        const stageIndex = journeyStages.findIndex(item => item.id === stage.id);
+        const status = stageMissions.length > 0 && done === stageMissions.length ? "Explorada" : stageIndex === activeStageIndex ? "Estás aquí" : "Por descubrir";
+        return <li key={stage.id}><button className={stageIndex === activeStageIndex ? experience.currentStage : undefined} type="button" onClick={() => viewStage(stage.id)} aria-label={`Ver acciones de ${stage.title}: ${status}`} aria-current={stageIndex === activeStageIndex ? "step" : undefined}><span className={styles.pathNumber}>{stage.number}</span><span className={styles.pathCopy}><span className={experience.stageStatus}>{status}</span><strong>{stage.title}</strong><small>{stage.description}</small><span className={experience.stageBenefit}>✦ {stage.benefit}</span><em>{stageMissions.length ? `${done} de ${stageMissions.length} ${stageMissions.length === 1 ? "acción completada" : "acciones completadas"}` : "Explora esta etapa"}</em></span><span className={styles.pathArrow} aria-hidden="true">↗</span></button></li>;
       })}</ol> : <p className={styles.empty}>Estamos preparando las próximas acciones del Club.</p>}
     </section>
 
@@ -177,7 +182,7 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
         const gap = rewardGap(balance, reward.points_cost);
         const soldOut = reward.stock === 0;
         const redeemed = demoRedemptions.includes(reward.id);
-        return <article className={styles.reward} key={reward.id}><span className={`${styles.rewardStatus} ${gap === 0 && !soldOut && !redeemed && (demo || redemptionsEnabled) ? styles.rewardReady : ""}`}>{soldOut ? "Agotado" : redeemed ? "Canje de muestra" : !demo && !redemptionsEnabled ? "Canje en preparación" : gap === 0 ? "Puedes redimirlo" : `Te faltan ${points(gap)} puntos`}</span><h3>{reward.title}</h3><p>{reward.description}</p><div className={styles.rewardProgress}><progress value={Math.min(balance, reward.points_cost)} max={reward.points_cost} aria-label={`Puntos para ${reward.title}`} /><span>{points(Math.min(balance, reward.points_cost))} / {points(reward.points_cost)} puntos</span></div><div className={styles.rewardBottom}><strong>{points(reward.points_cost)} puntos</strong><button type="button" disabled={(!demo && !redemptionsEnabled) || soldOut || gap > 0 || redeemed || loading !== null} onClick={() => redeem(reward)}>{loading === reward.id ? "Procesando…" : redeemed ? "Canje visto" : !demo && !redemptionsEnabled ? "Próximamente" : soldOut ? "Agotado" : gap > 0 ? "Aún no" : "Redimir ↗"}</button></div></article>;
+        return <article className={styles.reward} key={reward.id}><span className={`${styles.rewardStatus} ${gap === 0 && !soldOut && !redeemed && (demo || redemptionsEnabled) ? styles.rewardReady : ""}`}>{soldOut ? "Agotado" : redeemed ? "Canje de muestra" : !demo && !redemptionsEnabled ? "Canje en preparación" : gap === 0 ? demo ? "Disponible en esta demo" : "Puedes redimirlo" : `Te faltan ${points(gap)} puntos`}</span><h3>{reward.title}</h3><p>{reward.description}</p><div className={styles.rewardProgress}><progress value={Math.min(balance, reward.points_cost)} max={reward.points_cost} aria-label={`Puntos para ${reward.title}`} /><span>{points(Math.min(balance, reward.points_cost))} / {points(reward.points_cost)} puntos</span></div><div className={styles.rewardBottom}><strong>{points(reward.points_cost)} puntos</strong><button type="button" disabled={(!demo && !redemptionsEnabled) || soldOut || gap > 0 || redeemed || loading !== null} onClick={() => redeem(reward)}>{loading === reward.id ? "Procesando…" : redeemed ? "Canje visto" : !demo && !redemptionsEnabled ? "Próximamente" : soldOut ? "Agotado" : gap > 0 ? "Aún no" : demo ? "Simular canje ↗" : "Redimir ↗"}</button></div></article>;
       })}</div>
       {rewards.length === 0 && <p className={styles.empty}>El banco de recompensas se está preparando.</p>}
       {message && <p className={styles.message} role="status">{message}</p>}

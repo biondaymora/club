@@ -2,8 +2,11 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "../../lib/supabase/server";
 import { createAdminClient } from "../../lib/supabase/admin";
 import ClubDashboard from "./club-dashboard";
+import { clubLiveEnabled } from "../../lib/club-mode";
+import { cookies } from "next/headers";
 
 export default async function ClubPage() {
+  if (!clubLiveEnabled) redirect((await cookies()).has("bm_beta_profile") ? "/club/demo" : "/registro");
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/club" as never);

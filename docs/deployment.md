@@ -2,6 +2,8 @@
 
 ## 1. Supabase
 
+El repositorio se publica inicialmente en `NEXT_PUBLIC_CLUB_MODE=preview` (valor por defecto). En ese modo `/registro`, `/club/demo` y `/admin/demo` funcionan sin Supabase; `/club` y `/admin` llevan a esas vistas, y los endpoints de puntos, canjes, misiones, Shopify y Omnisend no procesan datos reales. Mantén ese modo para la reunión y las pruebas visuales.
+
 1. Crea un proyecto Supabase y copia URL, anon key y service-role key a Vercel.
 2. Ejecuta, en orden, las migraciones de `supabase/migrations/` y luego `supabase/seeds/rewards.sql`.
 3. Activa Magic Link en Auth y configura el dominio de retorno del Club.
@@ -29,7 +31,7 @@
 
 ### Actualización de contabilidad de la beta (migraciones 20261008)
 
-**Aplicar primero las cuatro migraciones nuevas en Supabase y validar el [runbook de conciliación](runbooks/beta-accounting-reconciliation.md); desplegar el código después.** El nuevo endpoint de Shopify y el cron llaman funciones SQL que no existen en una base sin migrar. Los canjes reales quedan pausados por defecto hasta que el equipo concilie saldos y los habilite explícitamente. No fusionar esta actualización a `main` con webhooks activos si no se puede completar ese orden.
+**Antes de cambiar `NEXT_PUBLIC_CLUB_MODE` a `live`**, aplicar las cuatro migraciones nuevas en Supabase y validar el [runbook de conciliación](runbooks/beta-accounting-reconciliation.md). El endpoint de Shopify y el cron llaman funciones SQL que no existen en una base sin migrar. Los canjes reales quedan pausados por defecto hasta que el equipo concilie saldos y los habilite explícitamente. Verifica que no haya webhooks de Shopify apuntando al Club durante la vista previa: el endpoint responde `503` para pedir reintento, nunca confirma silenciosamente un evento que no ha procesado. Cambiar el modo requiere un nuevo deployment porque es una variable `NEXT_PUBLIC_`.
 
 ### Si el enlace de Vercel pide iniciar sesión
 

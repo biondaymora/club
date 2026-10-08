@@ -65,7 +65,7 @@ export function nextReward(rewards: Reward[], balance: number): Reward | null {
 }
 
 export function recommendedMission(missions: Mission[]): Mission | null {
-  const priority = ["HONEST_REVIEW", "REAL_WALK", "WELCOME_PROFILE", "CARE_CARD", "WALK_TOGETHER", "SECOND_STEP", "COMPLETE_THE_LOOK"];
+  const priority = ["WELCOME_PROFILE", "CARE_CARD", "HONEST_REVIEW", "REAL_WALK", "COMPLETE_THE_LOOK", "SECOND_STEP", "WALK_TOGETHER"];
   return [...missions]
     .filter(mission => !mission.completed && !mission.pending)
     .sort((a, b) => {

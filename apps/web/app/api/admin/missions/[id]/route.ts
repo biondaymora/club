@@ -2,10 +2,12 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "../../../../../lib/supabase/admin";
 import { createServerSupabaseClient } from "../../../../../lib/supabase/server";
+import { clubLiveEnabled, integrationsPaused } from "../../../../../lib/club-mode";
 
 const bodySchema = z.object({ decision: z.enum(["approved", "rejected"]) });
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!clubLiveEnabled) return integrationsPaused();
   const origin = request.headers.get("origin");
   if (origin && origin !== new URL(request.url).origin) return new Response("Forbidden", { status: 403 });
   let body: unknown;

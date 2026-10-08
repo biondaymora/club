@@ -1,10 +1,12 @@
 import { NextRequest } from "next/server";
 import { createAdminClient } from "../../../lib/supabase/admin";
 import { verifyShopifyHmac } from "../../../lib/integrations/shopify";
+import { clubLiveEnabled } from "../../../lib/club-mode";
 
 const supportedTopics = new Set(["orders/paid", "orders/cancelled", "refunds/create"]);
 
 export async function POST(request: NextRequest) {
+  if (!clubLiveEnabled) return new Response("Club preview mode: Shopify processing paused", { status: 503, headers: { "Retry-After": "3600" } });
   const topic = request.headers.get("x-shopify-topic");
   const webhookId = request.headers.get("x-shopify-webhook-id");
   if (!topic || !webhookId) return new Response("Missing Shopify headers", { status: 400 });

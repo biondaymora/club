@@ -2,10 +2,12 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "../../../../lib/supabase/admin";
 import { createServerSupabaseClient } from "../../../../lib/supabase/server";
+import { clubLiveEnabled, integrationsPaused } from "../../../../lib/club-mode";
 
 const bodySchema = z.object({ rewardId: z.string().uuid(), customerId: z.string().uuid(), idempotencyKey: z.string().uuid() });
 
 export async function POST(request: NextRequest) {
+  if (!clubLiveEnabled) return integrationsPaused();
   const origin = request.headers.get("origin");
   if (origin && origin !== new URL(request.url).origin) return new Response("Forbidden", { status: 403 });
   let body: unknown;

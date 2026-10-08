@@ -2,8 +2,10 @@ import { NextRequest } from "next/server";
 import { createAdminClient } from "../../../../lib/supabase/admin";
 import { sendOmnisendEvent } from "../../../../lib/integrations/omnisend";
 import { requireServerEnv } from "../../../../lib/env";
+import { clubLiveEnabled } from "../../../../lib/club-mode";
 
 export async function GET(request: NextRequest) {
+  if (!clubLiveEnabled) return Response.json({ status: "paused", reason: "preview_mode" });
   if (request.headers.get("authorization") !== `Bearer ${requireServerEnv("CRON_SECRET")}`) return new Response("Unauthorized", { status: 401 });
   const supabase = createAdminClient();
   const { data: events, error } = await supabase.rpc("claim_outbox_events", { p_destination: "omnisend", p_limit: 25 });

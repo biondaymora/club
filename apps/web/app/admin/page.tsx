@@ -5,11 +5,13 @@ import RedemptionActions from "./redemption-actions";
 import MissionReviewActions from "./mission-review-actions";
 import { env } from "../../lib/env";
 import styles from "./admin.module.css";
+import { clubLiveEnabled } from "../../lib/club-mode";
 
 type Redemption = { id: string; created_at: string; customer_profiles: { email: string } | null; rewards: { title: string } | null };
 type Submission = { id: string; completed_at: string; progress: { evidence_url?: string }; customer_profiles: { email: string } | null; missions: { title: string } | null };
 
 export default async function AdminPage() {
+  if (!clubLiveEnabled) redirect("/admin/demo");
   const sessionClient = await createServerSupabaseClient();
   const { data: { user } } = await sessionClient.auth.getUser();
   if (!user) redirect("/login?next=/admin" as never);
