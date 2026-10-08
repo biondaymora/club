@@ -21,11 +21,14 @@ El [estudio de experiencia del Club](docs/research/loyalty-ux-benchmark-2026-10.
 
 ## Rutas principales
 
+El despliegue arranca en **vista previa** por defecto (`NEXT_PUBLIC_CLUB_MODE=preview`): se puede mostrar la experiencia de clienta y equipo sin activar integraciones ni beneficios reales. Consulta [puesta en marcha](docs/deployment.md) antes de usar `live`.
+
 - `/` — landing pública del Club con visuales locales de la marca.
 - `/landing` — alias de la landing pública.
 - `/login` — acceso de clientas mediante Magic Link.
 - `/registro` — entrada a la vista de prueba mediante nombre, correo y celular.
 - `/club/demo` — recorrido visual con puntos y canjes ilustrativos.
+- `/admin/demo` — vista operativa ilustrativa, sin datos reales.
 - `/club` — área autenticada: saldo, historial y banco de recompensas.
 - `/admin` — panel autenticado de operación y canjes.
 - `/api/webhooks/shopify` — entrada firmada de eventos Shopify.
