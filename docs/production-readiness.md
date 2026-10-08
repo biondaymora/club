@@ -21,6 +21,9 @@
 - [ ] Flujos de Omnisend probados con perfiles de prueba.
 - [ ] Conciliación entre saldos proyectados y ledger completada.
 - [ ] Redención, devolución parcial y reintento de webhook cubiertos por E2E.
+- [ ] Se revisaron los pedidos históricos que pudieron recibir puntos 100 veces mayores y se conciliaron sin editar el ledger original.
+- [ ] Shopify `orders/paid`, `orders/cancelled` y `refunds/create` se probaron con payloads reales y eventos fuera de orden.
+- [ ] La reseña/historia aprobada, rechazada y reenviada se probó con una compra válida y una cancelada.
 
 ## Operación
 
@@ -36,5 +39,8 @@
 - [ ] Se creó una cuenta administradora en `auth.users` y se insertó su id en `admin_roles` con rol `operator` o `admin`.
 - [ ] Se crearon al menos dos cuentas de prueba: una con puntos suficientes y otra sin saldo suficiente.
 - [ ] Se realizó un canje de prueba, se marcó como entregado y se verificó el ajuste en el ledger.
+- [ ] Después de conciliar saldos y aprobar la operación, se habilitó explícitamente `club_runtime_settings.redemptions_enabled` en la base de beta.
 - [ ] Se comprobó que una clienta no puede consultar ni canjear desde la cuenta de otra.
 - [ ] Shopify y Omnisend se prueban primero con datos de prueba; no habilitar campañas automáticas antes de validar consentimiento.
+- [ ] El banco real solo muestra recompensas entregables y sus términos/stock fueron aprobados. Cashback sigue desactivado hasta conectar emisión y reversos.
+- [ ] Se publicó la política de tratamiento de datos y términos del Club aprobados por la marca; los registros de consentimiento son verificables.

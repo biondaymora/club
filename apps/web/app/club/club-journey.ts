@@ -38,6 +38,7 @@ const guides: Record<string, MissionGuide> = {
   CARE_CARD: { stage: "empieza", time: "3 min", steps: ["Descubre cómo limpiar y conservar el cuero de tu pieza.", "Guarda la guía para tenerla cerca después de tu compra."], validation: "La lectura se registrará cuando esté disponible la guía dentro del Club." },
   SECOND_STEP: { stage: "disfruta", time: "A tu ritmo", steps: ["Explora la colección cuando quieras encontrar una nueva pieza.", "Tu segunda compra elegible se asociará a tu cuenta del Club."], validation: "Se confirma después del pago y del período de cambios." },
   COMPLETE_THE_LOOK: { stage: "disfruta", time: "A tu ritmo", steps: ["Encuentra un accesorio que acompañe una pieza que ya tienes.", "Compra desde la tienda con el mismo correo asociado al Club."], validation: "Se confirma después del pago y del período de cambios." },
+  HONEST_REVIEW: { stage: "comparte", time: "5 min", steps: ["Escribe una reseña sincera de una pieza que compraste.", "Comparte aquí el enlace público para que el equipo pueda revisarla."], validation: "El equipo verifica la compra y la reseña antes de acreditar los puntos. Tu opinión no tiene que ser positiva." },
   REAL_WALK: { stage: "comparte", time: "5 min", steps: ["Cuenta una experiencia honesta con tu pieza, en foto, video o palabras.", "Decide por separado si autorizas que la marca publique tu contenido."], validation: "El equipo revisa la participación antes de asignar puntos. Una reseña crítica también es bienvenida." },
   WALK_TOGETHER: { stage: "circulo", time: "Cuando quieras", steps: ["Recomienda la marca a una amiga sólo si crees que le puede gustar.", "La invitación se vinculará a tu cuenta cuando se habilite el enlace personal."], validation: "Ambas reciben el beneficio cuando la primera compra de tu amiga sea válida y pase el período de cambios." }
 };
@@ -64,7 +65,7 @@ export function nextReward(rewards: Reward[], balance: number): Reward | null {
 }
 
 export function recommendedMission(missions: Mission[]): Mission | null {
-  const priority = ["WELCOME_PROFILE", "CARE_CARD", "REAL_WALK", "WALK_TOGETHER", "SECOND_STEP", "COMPLETE_THE_LOOK"];
+  const priority = ["HONEST_REVIEW", "REAL_WALK", "WELCOME_PROFILE", "CARE_CARD", "WALK_TOGETHER", "SECOND_STEP", "COMPLETE_THE_LOOK"];
   return [...missions]
     .filter(mission => !mission.completed && !mission.pending)
     .sort((a, b) => {

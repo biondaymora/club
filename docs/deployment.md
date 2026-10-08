@@ -27,6 +27,10 @@
 3. Configura `club.biondaymora.com` y, si corresponde, una redirección desde `www`.
 4. Ejecuta el checklist de [producción](production-readiness.md) antes de activar los webhooks reales.
 
+### Actualización de contabilidad de la beta (migraciones 20261008)
+
+**Aplicar primero las cuatro migraciones nuevas en Supabase y validar el [runbook de conciliación](runbooks/beta-accounting-reconciliation.md); desplegar el código después.** El nuevo endpoint de Shopify y el cron llaman funciones SQL que no existen en una base sin migrar. Los canjes reales quedan pausados por defecto hasta que el equipo concilie saldos y los habilite explícitamente. No fusionar esta actualización a `main` con webhooks activos si no se puede completar ese orden.
+
 ### Si el enlace de Vercel pide iniciar sesión
 
 El proyecto tiene **Deployment Protection** activada o el enlace pertenece a un deployment protegido. En Vercel, con acceso de propietario: abrir el proyecto, ir a **Settings → Deployment Protection**, desactivar la protección para Production o habilitar el método de acceso que usará el equipo. Luego abrir **Deployments**, confirmar que el deployment de producción apunta al último commit de `main` y promoverlo si fuese necesario. Sin esa configuración, el dominio puede redirigir a `vercel.com/login` aunque el código se haya subido correctamente a GitHub.

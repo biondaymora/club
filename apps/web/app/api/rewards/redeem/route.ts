@@ -6,7 +6,11 @@ import { createServerSupabaseClient } from "../../../../lib/supabase/server";
 const bodySchema = z.object({ rewardId: z.string().uuid(), customerId: z.string().uuid(), idempotencyKey: z.string().uuid() });
 
 export async function POST(request: NextRequest) {
-  const parsed = bodySchema.safeParse(await request.json());
+  const origin = request.headers.get("origin");
+  if (origin && origin !== new URL(request.url).origin) return new Response("Forbidden", { status: 403 });
+  let body: unknown;
+  try { body = await request.json(); } catch { return Response.json({ error: "Invalid JSON" }, { status: 400 }); }
+  const parsed = bodySchema.safeParse(body);
   if (!parsed.success) return Response.json({ error: "Invalid redemption payload" }, { status: 400 });
   const sessionClient = await createServerSupabaseClient();
   const { data: { user } } = await sessionClient.auth.getUser();

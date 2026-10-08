@@ -22,7 +22,7 @@ export function verifyShopifyHmac(rawBody: string, signature: string | null) {
 
 export async function shopifyAdminFetch<T>(query: string, variables: Record<string, unknown> = {}): Promise<T> {
   const domain = requireServerEnv("SHOPIFY_STORE_DOMAIN");
-  const response = await fetch(`https://${domain}/admin/api/2025-01/graphql.json`, {
+  const response = await fetch(`https://${domain}/admin/api/2026-10/graphql.json`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Shopify-Access-Token": requireServerEnv("SHOPIFY_ADMIN_ACCESS_TOKEN") },
     body: JSON.stringify({ query, variables })
