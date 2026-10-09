@@ -5,7 +5,22 @@ export type Reward = {
   description: string;
   points_cost: number;
   stock: number | null;
+  category?: RewardCategory;
 };
+
+export type RewardCategory = "tarjetas" | "piezas" | "cuidado" | "experiencias";
+
+export const rewardCategories: { id: RewardCategory; label: string }[] = [
+  { id: "tarjetas", label: "Tarjetas" },
+  { id: "piezas", label: "Piezas" },
+  { id: "cuidado", label: "Cuidado" },
+  { id: "experiencias", label: "Experiencias" }
+];
+
+export function visibleRewards(rewards: Reward[], category: RewardCategory | "todas", showAll: boolean, initialCount = 6): Reward[] {
+  const matching = category === "todas" ? rewards : rewards.filter(reward => reward.category === category);
+  return category === "todas" && !showAll ? matching.slice(0, initialCount) : matching;
+}
 
 export type Mission = {
   id: string;

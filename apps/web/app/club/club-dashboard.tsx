@@ -3,11 +3,13 @@
 import Image from "next/image";
 import { FormEvent, useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "../../lib/supabase/browser";
-import { actionCategories, demoExtraMissions, journeyStages, missionGuide, recommendedMission, rewardGap, rewardGoal, type ActionCategory, type Mission, type Reward, type StageId } from "./club-journey";
+import { actionCategories, demoExtraMissions, journeyStages, missionGuide, recommendedMission, rewardCategories, rewardGap, rewardGoal, visibleRewards, type ActionCategory, type Mission, type Reward, type RewardCategory, type StageId } from "./club-journey";
 import { readDemoSnapshot } from "./demo-session";
+import { rewardIdeas } from "./demo/reward-catalog";
 import { entryExperience, type DemoScenario } from "../../lib/club-entry";
 import styles from "./club-dashboard.module.css";
 import experience from "./club-experience.module.css";
+import rewardBank from "./reward-bank.module.css";
 
 type Ledger = { id: string; event_type: string; amount: number; occurred_at: string; metadata: Record<string, unknown> };
 type Member = { id: string; email: string; name?: string };
@@ -24,6 +26,8 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<ActionCategory | "todas">("todas");
+  const [rewardFilter, setRewardFilter] = useState<RewardCategory | "todas">("todas");
+  const [showAllRewards, setShowAllRewards] = useState(false);
   const [stageFilter, setStageFilter] = useState<StageId | null>(null);
   const [openMission, setOpenMission] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
@@ -48,6 +52,9 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
   const suggestedMission = recommendedMission(actionableMissions.map(mission => ({ ...mission, completed: isCompleted(mission) })));
   const upcomingReward = rewardGoal(rewards, balance, goalRewardId, demoRedemptions);
   const availableRewards = (demo || redemptionsEnabled) ? rewards.filter(reward => reward.stock !== 0 && reward.points_cost <= balance && !demoRedemptions.includes(reward.id)).length : 0;
+  const filteredRewards = visibleRewards(rewards, rewardFilter, showAllRewards);
+  const activeRewardCategories = rewardCategories.filter(category => rewards.some(reward => reward.category === category.id));
+  const hasMoreRewards = rewardFilter === "todas" && rewards.length > 6;
   const categoryMissions = allMissions.filter(mission => stageFilter ? missionGuide(mission.code).stage === stageFilter : categoryFilter === "todas" || missionGuide(mission.code).category === categoryFilter);
   const completedSingleCount = categoryMissions.filter(mission => isCompleted(mission) && !missionGuide(mission.code).repeatable).length;
   const visibleMissions = categoryMissions.filter(mission => showCompleted || openMission === mission.id || !isCompleted(mission) || missionGuide(mission.code).repeatable)
@@ -295,15 +302,18 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
     </section>
 
     <section id="recompensas" className={styles.section}>
-      <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>BANCO DE RECOMPENSAS</p><h2>Beneficios por desbloquear.</h2><p>{!demo && !redemptionsEnabled ? "Los canjes reales se habilitarán después de validar los saldos y la entrega de beneficios." : "Ve lo que puedes redimir hoy y exactamente cuánto te falta para lo demás."}</p></div><span>{points(balance)} puntos disponibles</span></div>
-      <div className={styles.rewardGrid}>{rewards.map(reward => {
+      <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>BANCO DE RECOMPENSAS</p><h2>Beneficios por desbloquear.</h2><p>{!demo && !redemptionsEnabled ? "Los canjes reales se habilitarán después de validar los saldos y la entrega de beneficios." : demo ? "Explora opciones para cuidar, elegir y celebrar. Montos, puntos, inventario y canjes de esta demo son ejemplos por aprobar." : "Ve lo que puedes redimir y exactamente cuánto te falta para lo demás."}</p></div><span>{points(balance)} puntos disponibles</span></div>
+      {activeRewardCategories.length > 0 && <div className={rewardBank.filters} aria-label="Filtrar recompensas"><button type="button" aria-pressed={rewardFilter === "todas"} onClick={() => { setRewardFilter("todas"); setShowAllRewards(false); }}>Todas ({rewards.length})</button>{activeRewardCategories.map(category => <button key={category.id} type="button" aria-pressed={rewardFilter === category.id} onClick={() => setRewardFilter(category.id)}>{category.label} ({rewards.filter(reward => reward.category === category.id).length})</button>)}</div>}
+      <div className={styles.rewardGrid}>{filteredRewards.map(reward => {
         const gap = rewardGap(balance, reward.points_cost);
         const soldOut = reward.stock === 0;
         const redeemed = demoRedemptions.includes(reward.id);
         return <article className={styles.reward} key={reward.id}><span className={`${styles.rewardStatus} ${gap === 0 && !soldOut && !redeemed && (demo || redemptionsEnabled) ? styles.rewardReady : ""}`}>{soldOut ? "Agotado" : redeemed ? "Canje de muestra" : !demo && !redemptionsEnabled ? "Canje en preparación" : gap === 0 ? demo ? "Disponible en esta demo" : "Puedes redimirlo" : `Te faltan ${points(gap)} puntos`}</span><h3>{reward.title}</h3><p>{reward.description}</p>{demo && !soldOut && !redeemed && <button type="button" className={experience.goalButton} aria-pressed={goalRewardId === reward.id} onClick={() => setGoalRewardId(reward.id)}>{goalRewardId === reward.id ? "✓ Mi meta de prueba" : "Elegir como meta de prueba"}</button>}<div className={styles.rewardProgress}><progress value={Math.min(balance, reward.points_cost)} max={reward.points_cost} aria-label={`Puntos para ${reward.title}`} /><span>{points(Math.min(balance, reward.points_cost))} / {points(reward.points_cost)} puntos</span></div><div className={styles.rewardBottom}><strong>{points(reward.points_cost)} puntos</strong><button type="button" disabled={(!demo && !redemptionsEnabled) || soldOut || gap > 0 || redeemed || loading !== null} onClick={() => redeem(reward)}>{loading === reward.id ? "Procesando…" : redeemed ? "Canje visto" : !demo && !redemptionsEnabled ? "Próximamente" : soldOut ? "Agotado" : gap > 0 ? "Aún no" : demo ? "Simular canje ↗" : "Redimir ↗"}</button></div></article>;
       })}</div>
+      {hasMoreRewards && <button className={rewardBank.moreButton} type="button" aria-expanded={showAllRewards} onClick={() => setShowAllRewards(value => !value)}>{showAllRewards ? "Mostrar menos recompensas ↑" : `Ver las ${rewards.length} recompensas ↓`}</button>}
       {rewards.length === 0 && <p className={styles.empty}>El banco de recompensas se está preparando.</p>}
       {message && <p className={styles.message} role="status">{message}</p>}
+      {demo && <div className={rewardBank.futureSection}><div className={rewardBank.futureHeading}><p className={styles.eyebrow}>LO QUE PODRÍA VENIR</p><h3>Más formas de sentirte parte.</h3><p>Estas ideas no tienen puntos, fecha ni canje. Queremos validar contigo cuáles valen la pena antes de prometerlas.</p></div><div className={rewardBank.ideaGrid}>{rewardIdeas.map(idea => <article className={rewardBank.ideaCard} key={idea.title}><span>IDEA PARA VALIDAR</span><h4>{idea.title}</h4><p>{idea.description}</p><small>Aún no disponible</small></article>)}</div><article className={rewardBank.bootGoal}><div><span>LA GRAN META · IDEA PARA VALIDAR</span><h4>Un par de botas para acompañar tu camino.</h4><p>Queremos que tus compras y aportes genuinos puedan llevarte hasta una pieza mayor. La meta, las condiciones y el presupuesto todavía deben definirse; hoy no existe un canje de botas.</p></div><small>Sin puntos ni fecha aprobados</small></article></div>}
     </section>
 
     <section className={styles.community}><div><p className={styles.eyebrow}>EL CÍRCULO</p><h2>Caminar juntas también cuenta.</h2><p>Una amiga, una historia compartida o un encuentro en una feria pueden convertirse en parte de tu recorrido.</p></div><div><strong>Invita con intención</strong><p>El beneficio para ambas se confirma sólo después de una primera compra válida de tu amiga.</p><strong>Encuentros Bionda y Mora</strong><p>La agenda de ferias aparecerá aquí cuando haya fechas confirmadas.</p></div></section>

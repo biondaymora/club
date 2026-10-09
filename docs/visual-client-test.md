@@ -24,6 +24,7 @@ No explicar dónde pulsar. Preguntar primero qué cree que puede hacer; después
 | 5 | Encuentra otra acción que no implique comprar. | Usa categorías o atajos; sabe que la ruta sugerida no bloquea nada. |
 | 6 | Abre «Mi tarjeta» y explica qué hará un futuro chip NFC. | Dice que abre la web, no inicia sesión ni suma puntos por tocar. |
 | 7 | Cambia al escenario «Ya he comprado antes» y simula un canje. | Reconoce 1.240 puntos de ejemplo y que el canje no entrega beneficio real. |
+| 8 | Busca una tarjeta de regalo, una pañoleta y el Set Viajera; luego encuentra la idea de las botas. | Usa filtros o «Ver todas», identifica el costo de muestra y entiende que las botas no se pueden redimir todavía. |
 
 Registrar por tarea: completada sin ayuda / con ayuda / no completada, tiempo aproximado, dudas textuales y momento de confusión. Al terminar, preguntar «¿Qué harías por gusto?», «¿Qué te parecería demasiado trabajo?» y «¿Qué beneficio te ilusiona de verdad?». No interpretar una única prueba como validación de mercado; usarla para corregir fallos obvios antes de ampliar a 5–8 clientas.
 

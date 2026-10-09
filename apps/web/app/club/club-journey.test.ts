@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { actionCategories, demoExtraMissions, missionGuide, nextReward, recommendedMission, rewardGap, rewardGoal, type Mission, type Reward } from "./club-journey";
+import { actionCategories, demoExtraMissions, missionGuide, nextReward, recommendedMission, rewardGap, rewardGoal, visibleRewards, type Mission, type Reward } from "./club-journey";
 
 const rewards: Reward[] = [
   { id: "cashback", code: "cashback_50000", title: "Cashback", description: "", points_cost: 1500, stock: null },
@@ -19,6 +19,14 @@ describe("camino y beneficios", () => {
     expect(rewardGoal(rewards, 0, "cashback")?.id).toBe("cashback");
     expect(rewardGoal(rewards, 1240, "shipping", ["shipping"])?.id).toBe("cashback");
     expect(rewardGoal(rewards, 1800, null)?.id).toBe("shipping");
+  });
+
+  it("filtra el catálogo sin alterar la lista original y expande solo la vista general", () => {
+    const catalog: Reward[] = Array.from({ length: 8 }, (_, index) => ({ id: String(index), code: String(index), title: String(index), description: "", points_cost: index + 1, stock: null, category: index % 2 ? "piezas" : "tarjetas" }));
+    expect(visibleRewards(catalog, "todas", false).map(item => item.id)).toEqual(["0", "1", "2", "3", "4", "5"]);
+    expect(visibleRewards(catalog, "todas", true)).toHaveLength(8);
+    expect(visibleRewards(catalog, "piezas", false).map(item => item.id)).toEqual(["1", "3", "5", "7"]);
+    expect(catalog).toHaveLength(8);
   });
 
   it("recomienda una acción pendiente que no exige una nueva compra", () => {

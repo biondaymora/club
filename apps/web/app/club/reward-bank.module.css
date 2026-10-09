@@ -1,0 +1,141 @@
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+
+.filters button {
+  border: 1px solid #d9cbbc;
+  background: #fffdf9;
+  color: #614f40;
+  padding: 10px 15px;
+  font: 600 11px var(--bm-sans), Arial, sans-serif;
+  cursor: pointer;
+}
+
+.filters button[aria-pressed="true"] {
+  border-color: #4a311d;
+  background: #4a311d;
+  color: #fff;
+}
+
+.filters button:hover:not([aria-pressed="true"]) {
+  background: #eee4d7;
+}
+
+.moreButton {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 15px;
+  border: 1px solid #bfa993;
+  background: transparent;
+  color: #4a311d;
+  font: 600 12px var(--bm-sans), Arial, sans-serif;
+  cursor: pointer;
+}
+
+.moreButton:hover {
+  background: #eee4d7;
+}
+
+.futureSection {
+  margin-top: 60px;
+  padding-top: 42px;
+  border-top: 1px solid #ded4c8;
+}
+
+.futureHeading h3 {
+  margin: 0;
+  font: 400 33px/1.12 var(--bm-serif), Georgia, serif;
+}
+
+.futureHeading > p:last-child {
+  max-width: 640px;
+  margin: 12px 0 25px;
+  color: #75695e;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ideaGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ideaCard {
+  min-height: 188px;
+  padding: 23px;
+  border: 1px solid #e2d7ca;
+  background: #f4efe8;
+  display: flex;
+  flex-direction: column;
+}
+
+.ideaCard > span,
+.bootGoal span {
+  color: #9b694b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+.ideaCard h4 {
+  margin: 16px 0 7px;
+  font: 400 23px/1.12 var(--bm-serif), Georgia, serif;
+}
+
+.ideaCard p,
+.bootGoal p {
+  margin: 0;
+  color: #71665d;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ideaCard small {
+  margin-top: auto;
+  padding-top: 16px;
+  color: #806b5b;
+  font-size: 10px;
+}
+
+.bootGoal {
+  margin-top: 16px;
+  padding: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 25px;
+  background: #e9dccb;
+}
+
+.bootGoal h4 {
+  margin: 13px 0 10px;
+  font: 400 29px/1.12 var(--bm-serif), Georgia, serif;
+}
+
+.bootGoal p {
+  max-width: 760px;
+}
+
+.bootGoal small {
+  flex-shrink: 0;
+  color: #73553d;
+  font-size: 11px;
+}
+
+@media (max-width: 850px) {
+  .ideaGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bootGoal { display: block; }
+  .bootGoal small { display: block; margin-top: 17px; }
+}
+
+@media (max-width: 600px) {
+  .ideaGrid { grid-template-columns: 1fr; }
+  .ideaCard { min-height: 0; }
+  .futureSection { margin-top: 48px; }
+  .futureHeading h3 { font-size: 30px; }
+}
