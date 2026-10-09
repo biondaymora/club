@@ -48,7 +48,7 @@ export type MissionGuide = {
 };
 
 const guides: Record<string, MissionGuide> = {
-  WELCOME_PROFILE: { stage: "empieza", category: "elige", time: "2 min", frequency: "Una sola vez", repeatable: false, steps: ["Cuéntanos qué tipo de piezas te gustan y cómo prefieres usarlas.", "Cuando se habilite tu perfil de estilo, guarda tus preferencias una sola vez."], validation: "Los puntos se asignarán cuando el perfil quede completo y verificado." },
+  WELCOME_PROFILE: { stage: "empieza", category: "elige", time: "2 min", frequency: "Una sola vez", repeatable: false, steps: ["En esta demo, elige el estilo que más te gusta para practicar el recorrido.", "Cuando se habilite tu perfil real, podrás guardar tus preferencias de forma voluntaria."], validation: "La elección de esta demo solo suma puntos ficticios. El perfil real se validará antes de asignar puntos." },
   CARE_CARD: { stage: "empieza", category: "elige", time: "3 min", frequency: "Una sola vez en esta versión", repeatable: false, steps: ["Descubre cómo limpiar y conservar el cuero de tu pieza.", "Guarda la guía para tenerla cerca después de tu compra."], validation: "La lectura se registrará cuando esté disponible la guía dentro del Club." },
   SECOND_STEP: { stage: "disfruta", category: "elige", time: "A tu ritmo", frequency: "Hito de segunda compra", repeatable: false, steps: ["Explora la colección cuando quieras encontrar una nueva pieza.", "Tu segunda compra elegible se asociará a tu cuenta del Club."], validation: "Se confirma después del pago y del período de cambios." },
   COMPLETE_THE_LOOK: { stage: "disfruta", category: "elige", time: "A tu ritmo", frequency: "Por compra complementaria", repeatable: true, demoLimit: 2, steps: ["Encuentra un accesorio que acompañe una pieza que ya tienes.", "Compra desde la tienda con el mismo correo asociado al Club."], validation: "Una compra complementaria distinta puede volver a participar; se confirma después del pago y del período de cambios." },
@@ -95,6 +95,12 @@ export function nextReward(rewards: Reward[], balance: number): Reward | null {
   return [...rewards]
     .filter(reward => reward.stock !== 0 && reward.points_cost > balance)
     .sort((a, b) => a.points_cost - b.points_cost)[0] ?? null;
+}
+
+export function rewardGoal(rewards: Reward[], balance: number, chosenId: string | null, redeemedIds: string[] = []): Reward | null {
+  const eligible = rewards.filter(reward => reward.stock !== 0 && !redeemedIds.includes(reward.id));
+  const chosen = eligible.find(reward => reward.id === chosenId);
+  return chosen ?? nextReward(eligible, balance) ?? [...eligible].sort((a, b) => a.points_cost - b.points_cost)[0] ?? null;
 }
 
 export function recommendedMission(missions: Mission[]): Mission | null {

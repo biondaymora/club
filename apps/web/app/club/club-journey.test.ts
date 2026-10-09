@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { actionCategories, demoExtraMissions, missionGuide, nextReward, recommendedMission, rewardGap, type Mission, type Reward } from "./club-journey";
+import { actionCategories, demoExtraMissions, missionGuide, nextReward, recommendedMission, rewardGap, rewardGoal, type Mission, type Reward } from "./club-journey";
 
 const rewards: Reward[] = [
   { id: "cashback", code: "cashback_50000", title: "Cashback", description: "", points_cost: 1500, stock: null },
@@ -13,6 +13,12 @@ describe("camino y beneficios", () => {
     expect(reward?.id).toBe("cashback");
     expect(rewardGap(1240, reward!.points_cost)).toBe(260);
     expect(rewardGap(1600, reward!.points_cost)).toBe(0);
+  });
+
+  it("respeta una meta elegida y cambia de meta después de un canje de muestra", () => {
+    expect(rewardGoal(rewards, 0, "cashback")?.id).toBe("cashback");
+    expect(rewardGoal(rewards, 1240, "shipping", ["shipping"])?.id).toBe("cashback");
+    expect(rewardGoal(rewards, 1800, null)?.id).toBe("shipping");
   });
 
   it("recomienda una acción pendiente que no exige una nueva compra", () => {

@@ -27,7 +27,7 @@ El despliegue arranca en **vista previa** por defecto (`NEXT_PUBLIC_CLUB_MODE=pr
 - `/` — landing pública del Club con visuales locales de la marca.
 - `/landing` — alias de la landing pública.
 - `/login` — acceso de clientas mediante Magic Link.
-- `/registro` — entrada a la vista de prueba mediante nombre, correo y celular.
+- `/registro` — entrada a la vista de prueba sin datos personales obligatorios; permite empezar desde cero o con una cuenta ficticia que ya tiene puntos.
 - `/club/demo` — recorrido visual con puntos y canjes ilustrativos.
 - `/admin/demo` — vista operativa ilustrativa, sin datos reales.
 - `/club` — área autenticada: saldo, historial y banco de recompensas.
@@ -37,5 +37,6 @@ El despliegue arranca en **vista previa** por defecto (`NEXT_PUBLIC_CLUB_MODE=pr
 
 Consulta la [guía de puesta en marcha](docs/deployment.md) para conectar los proveedores reales.
 Para activar la beta con clientas, sigue el [plan de pruebas](docs/beta-test-plan.md).
+Para una **primera prueba guiada de experiencia sin integraciones**, usa el [guion visual para una clienta](docs/visual-client-test.md). No equivale a la beta transaccional.
 
 Consulta el [alcance de la experiencia visual y beta](docs/mvp-visual.md) para distinguir las rutas públicas de las que requieren integración.
