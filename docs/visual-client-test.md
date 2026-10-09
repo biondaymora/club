@@ -28,6 +28,8 @@ No explicar dónde pulsar. Preguntar primero qué cree que puede hacer; después
 
 Registrar por tarea: completada sin ayuda / con ayuda / no completada, tiempo aproximado, dudas textuales y momento de confusión. Al terminar, preguntar «¿Qué harías por gusto?», «¿Qué te parecería demasiado trabajo?» y «¿Qué beneficio te ilusiona de verdad?». No interpretar una única prueba como validación de mercado; usarla para corregir fallos obvios antes de ampliar a 5–8 clientas.
 
+Antes de que la clienta abra los detalles de una acción, pedirle que explique qué tendría que hacer, si necesita haber comprado y cuándo recibiría puntos. Las tarjetas muestran primero la tarea y el requisito; la frase de marca es secundaria. Registrar cualquier tarjeta que no pueda entenderse sin ayuda.
+
 ## Criterio para decir “lista para una prueba visual”
 
 - [x] Entrada sin datos personales obligatorios y dos puntos de partida explícitos.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { actionCategories, demoExtraMissions, missionGuide, nextReward, recommendedMission, rewardGap, rewardGoal, visibleRewards, type Mission, type Reward } from "./club-journey";
+import { actionCategories, demoExtraMissions, missionCopy, missionGuide, nextReward, recommendedMission, rewardGap, rewardGoal, visibleRewards, type Mission, type Reward } from "./club-journey";
 
 const rewards: Reward[] = [
   { id: "cashback", code: "cashback_50000", title: "Cashback", description: "", points_cost: 1500, stock: null },
@@ -46,5 +46,20 @@ describe("camino y beneficios", () => {
     expect(missionGuide("FAIR_VISIT").requiresEvent).toBe(true);
     expect(missionGuide("WELCOME_PROFILE").repeatable).toBe(false);
     expect(missionGuide("HONEST_REVIEW").frequency).toContain("compra distinta");
+  });
+
+  it("explica cada tarea antes de abrirla y separa requisito de historia", () => {
+    const codes = ["WELCOME_PROFILE", "CARE_CARD", "SECOND_STEP", "COMPLETE_THE_LOOK", "RETURN_PURCHASE", "HONEST_REVIEW", "REAL_WALK", "VIDEO_STORY", "STYLE_TESTIMONIAL", "CARE_TIP", "WALK_TOGETHER", "FRIEND_TESTIMONIAL", "FAIR_VISIT"];
+    for (const code of codes) {
+      const copy = missionCopy({ id: code, code, title: "Sin título", description: "Sin requisito", points_reward: 0 });
+      expect(copy.title).not.toBe("Sin título");
+      expect(copy.requirement).not.toBe("Sin requisito");
+      expect(copy.story.length).toBeGreaterThan(10);
+    }
+    expect(missionCopy({ id: "review", code: "HONEST_REVIEW", title: "", description: "", points_reward: 0 }).requirement).toContain("enlace público");
+    expect(missionCopy({ id: "referral", code: "WALK_TOGETHER", title: "", description: "", points_reward: 0 }).requirement).toContain("primera compra válida");
+    const review: Mission = { id: "review", code: "HONEST_REVIEW", title: "", description: "", points_reward: 150 };
+    expect(missionCopy(review).requirement).toContain("una sola vez por cuenta");
+    expect(missionCopy(review, true).requirement).toContain("Una por compra");
   });
 });

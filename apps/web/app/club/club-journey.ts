@@ -32,6 +32,32 @@ export type Mission = {
   pending?: boolean;
 };
 
+export type MissionCopy = { title: string; requirement: string; story: string };
+
+/** The task and its eligibility must be understandable before opening its details. */
+const missionCopies: Record<string, MissionCopy> = {
+  WELCOME_PROFILE: { title: "Elige tu estilo en el Club", requirement: "Elige una preferencia de estilo. Se hace una sola vez.", story: "Conocerte nos ayuda a acompañar mejor tus próximas elecciones." },
+  CARE_CARD: { title: "Lee la guía de cuidado del cuero", requirement: "Lee la guía cuando esté disponible. Cuenta una vez por persona.", story: "Cuidar una pieza es darle tiempo para vivir más historias contigo." },
+  SECOND_STEP: { title: "Haz tu segunda compra", requirement: "Compra otra pieza con el correo de tu Club. Cuenta una vez, después del plazo de cambios.", story: "Una nueva elección puede abrir otra etapa en tu camino." },
+  COMPLETE_THE_LOOK: { title: "Compra un accesorio para tu pieza", requirement: "Compra un accesorio con el correo de tu Club. Cada compra distinta puede contar.", story: "A veces un pequeño detalle hace que una pieza se sienta aún más tuya." },
+  RETURN_PURCHASE: { title: "Vuelve a comprar una pieza", requirement: "Haz un nuevo pedido con el correo de tu Club. Cada pedido debe ser distinto y no haber sido devuelto.", story: "Vuelve solo cuando encuentres algo que de verdad quieras llevar contigo." },
+  HONEST_REVIEW: { title: "Publica una reseña de tu compra", requirement: "Escribe una reseña honesta de una pieza comprada y comparte su enlace público. Una por compra.", story: "Tu experiencia ayuda a otra mujer a elegir con más confianza." },
+  REAL_WALK: { title: "Comparte una historia de tu pieza", requirement: "Crea una historia original en foto, video o texto sobre una pieza comprada y comparte el enlace. Una distinta por pieza.", story: "Lo que viviste con ella puede inspirar el camino de alguien más." },
+  VIDEO_STORY: { title: "Graba un video con tu pieza", requirement: "Graba un video original con una pieza que compraste y comparte su enlace. Uno distinto por pieza.", story: "No hace falta un anuncio: basta un momento real de tu día." },
+  STYLE_TESTIMONIAL: { title: "Comparte un testimonio de tu compra", requirement: "Cuéntanos por texto, audio o video qué te gustó y qué mejorarías. Uno por compra distinta.", story: "Tu voz sincera puede acompañar la elección de otra mujer." },
+  CARE_TIP: { title: "Envía un consejo de cuidado", requirement: "Comparte un consejo que hayas probado con una pieza que compraste. Uno nuevo por mes.", story: "Algo que aprendiste cuidando tu pieza puede servirle a alguien más." },
+  WALK_TOGETHER: { title: "Invita a una amiga al Club", requirement: "Invítala cuando exista tu enlace personal. Sumas solo si hace su primera compra válida; máximo 3 amigas al mes.", story: "Las mejores recomendaciones nacen de pensar en lo que le gustará a ella." },
+  FRIEND_TESTIMONIAL: { title: "Comparte el testimonio de una amiga", requirement: "Pide su permiso y comparte el enlace a su testimonio sobre una compra suya. Uno por amiga y compra distintas.", story: "Su historia le pertenece: compartirla empieza con su sí." },
+  FAIR_VISIT: { title: "Visítanos en una feria", requirement: "Asiste a una feria anunciada y pídele al equipo registrar tu visita. Una vez por feria.", story: "Hay encuentros que hacen que el Club se sienta aún más cercano." }
+};
+
+export function missionCopy(mission: Mission, demo = false): MissionCopy {
+  const copy = missionCopies[mission.code.toUpperCase()] ?? { title: mission.title, requirement: mission.description, story: "" };
+  if (!demo && mission.code.toUpperCase() === "HONEST_REVIEW") return { ...copy, requirement: "Escribe una reseña honesta de una pieza comprada y comparte su enlace público. Por ahora suma una sola vez por cuenta." };
+  if (!demo && mission.code.toUpperCase() === "REAL_WALK") return { ...copy, requirement: "Comparte el enlace público de una historia original en foto, video o texto sobre una pieza comprada. Por ahora suma una sola vez por cuenta." };
+  return copy;
+}
+
 export const journeyStages = [
   { id: "empieza", number: "01", title: "Empieza", description: "Conoce el Club y descubre cómo cuidar tus piezas.", benefit: "Tus primeros puntos" },
   { id: "disfruta", number: "02", title: "Disfruta", description: "Elige a tu ritmo y vuelve cuando encuentres algo para ti.", benefit: "Más opciones para redimir" },
@@ -94,12 +120,12 @@ export function missionGuide(code: string): MissionGuide {
 
 /** Illustrative cards only; no extra mission is submitted to Supabase. */
 export const demoExtraMissions: Mission[] = [
-  { id: "demo-return-purchase", code: "RETURN_PURCHASE", title: "Vuelve cuando una pieza te llame", description: "Cada nueva compra elegible puede acercarte a otra recompensa.", points_reward: 200 },
-  { id: "demo-video-story", code: "VIDEO_STORY", title: "Graba un video real", description: "Muéstranos cómo te acompaña tu pieza en un día de verdad.", points_reward: 300 },
-  { id: "demo-style-testimonial", code: "STYLE_TESTIMONIAL", title: "Cuéntanos tu experiencia", description: "Un testimonio honesto, en tus palabras y sin guion.", points_reward: 180 },
-  { id: "demo-care-tip", code: "CARE_TIP", title: "Comparte un consejo de cuidado", description: "Una idea útil y probada por ti puede ayudar a otra mujer.", points_reward: 100 },
-  { id: "demo-friend-testimonial", code: "FRIEND_TESTIMONIAL", title: "Trae la historia de una amiga", description: "Si compró y quiere contarla, compártela con su permiso.", points_reward: 200 },
-  { id: "demo-fair-visit", code: "FAIR_VISIT", title: "Ven a vernos en una feria", description: "Conoce las piezas y al equipo cuando tengamos un encuentro confirmado.", points_reward: 120 }
+  { id: "demo-return-purchase", code: "RETURN_PURCHASE", title: "Vuelve a comprar una pieza", description: "Haz un pedido nuevo con el correo de tu Club.", points_reward: 200 },
+  { id: "demo-video-story", code: "VIDEO_STORY", title: "Graba un video con tu pieza", description: "Graba un video original con una pieza comprada y comparte su enlace.", points_reward: 300 },
+  { id: "demo-style-testimonial", code: "STYLE_TESTIMONIAL", title: "Comparte un testimonio de tu compra", description: "Cuéntanos por texto, audio o video qué te gustó y qué mejorarías.", points_reward: 180 },
+  { id: "demo-care-tip", code: "CARE_TIP", title: "Envía un consejo de cuidado", description: "Comparte un consejo que hayas probado en una pieza o material.", points_reward: 100 },
+  { id: "demo-friend-testimonial", code: "FRIEND_TESTIMONIAL", title: "Comparte el testimonio de una amiga", description: "Pide su permiso y comparte el enlace a su testimonio.", points_reward: 200 },
+  { id: "demo-fair-visit", code: "FAIR_VISIT", title: "Visítanos en una feria", description: "Asiste a una feria anunciada y registra tu visita con el equipo.", points_reward: 120 }
 ];
 
 export function rewardGap(balance: number, cost: number): number {
