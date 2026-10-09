@@ -2,6 +2,8 @@
 
 Estado: **prototipo funcional de experiencia**, no programa de fidelización activo. El enlace público es `/registro` con `NEXT_PUBLIC_CLUB_MODE=preview`. No solicitar correo, celular, compra, reseña real ni archivos a la participante. No prometer recompensas: precios, puntos, stock y reglas visibles son ilustrativos hasta que negocio los apruebe.
 
+Prueba también la tercera entrada desde `/registro?origen=web`: elegir «Me suscribí en la web» debe mostrar 0 puntos, una bienvenida propia y acciones de producto/reseña marcadas para después de una compra. No pedir una suscripción real durante la prueba visual.
+
 ## Preparación (5 minutos)
 
 1. Abrir `/registro` en el propio teléfono de prueba; verificar que la página carga sin login de Vercel.

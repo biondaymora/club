@@ -15,6 +15,9 @@
 - [ ] Shopify HMAC, rate limits e idempotencia validados.
 - [ ] Ningún secreto llega al navegador ni a logs.
 - [ ] Consentimientos de marketing y política de retención aprobados.
+- [ ] El formulario real de Omnisend en la tienda y su correo/confirmación enlazan a `/registro?origen=web`; no se marca una suscriptora como compradora ni se acreditan puntos por aceptar marketing.
+- [ ] El Magic Link de una suscriptora nueva crea el perfil `web_subscription` una sola vez; una clienta existente conserva su vínculo con Shopify.
+- [ ] Una baja de marketing en Omnisend no borra la membresía y la preferencia de correos del Club se gestiona de forma independiente.
 
 ## Negocio e integraciones
 

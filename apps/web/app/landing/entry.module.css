@@ -1,0 +1,7 @@
+.entry{display:flex;justify-content:space-between;align-items:center;gap:35px;padding:60px clamp(24px,9vw,150px);background:#efe5d8;border-top:1px solid #d8c7b6;border-bottom:1px solid #d8c7b6}
+.entry h2{font:400 clamp(30px,3vw,44px)/1.04 Georgia,serif;letter-spacing:-1.5px;margin:0 0 13px}
+.entry p:not(:first-child){max-width:570px;color:#65564a;font-size:14px;line-height:1.55;margin:0 0 8px}
+.entry small{font-size:11px;line-height:1.45;color:#786657}
+.entry>a{flex:0 0 auto;padding:16px 18px;background:#4a311d;color:#fff;text-decoration:none;font-size:12px;display:flex;gap:22px;align-items:center}
+.entry>a b{font-size:18px;font-weight:400}
+@media(max-width:800px){.entry{display:block;padding:48px 24px}.entry>a{display:inline-flex;margin-top:24px}}

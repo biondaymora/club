@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { parseDemoScenario } from "../../../lib/club-entry";
 
 const profileSchema = z.object({ name: z.string().trim().min(2).max(80) });
 
 export async function POST(request: NextRequest) {
   const form = await request.formData();
-  const scenario = form.get("scenario") === "returning" ? "returning" : "new";
+  const scenario = parseDemoScenario(form.get("scenario"));
   const guest = form.get("guest") === "1";
   const profile = guest ? null : profileSchema.safeParse({ name: form.get("name") });
   if (profile && !profile.success) return NextResponse.redirect(new URL("/registro?error=datos", request.url), 303);

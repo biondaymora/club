@@ -22,6 +22,13 @@ El repositorio se publica inicialmente en `NEXT_PUBLIC_CLUB_MODE=preview` (valor
 2. Configura `OMNISEND_API_KEY` y crea automations para `points_earned`, `tier_upgraded`, `cashback_earned` y `reward_redeemed`.
 3. Configura `CRON_SECRET`; en Vercel Hobby, el cron invoca `/api/cron/outbox` una vez al día a las 12:00 UTC (07:00 en Colombia). Para entregar eventos con baja latencia, actualiza a Vercel Pro o usa una cola/worker externo.
 
+### Entrada al Club desde una suscripción web
+
+- La landing del Club y `/registro?origen=web` ya muestran esta tercera puerta de entrada. En modo `preview` conduce a una experiencia ficticia sin pedir correo; en modo `live` solicita un Magic Link y registra `entry_source=web_subscription` tras verificar el correo.
+- En el formulario de suscripción de `biondaymora.com` o en el correo de bienvenida de Omnisend, enlaza explícitamente a `https://<dominio-del-club>/registro?origen=web`. Ese cambio en la tienda/automatización **no se realiza desde este repositorio** y debe probarlo el equipo con acceso a esas cuentas.
+- El enlace de origen solo personaliza la bienvenida. No demuestra que el correo esté suscrito en Omnisend, que haya comprado o que haya asistido a una feria; no acredita puntos. Una baja de marketing no elimina la cuenta del Club.
+- No importes automáticamente la lista histórica de Omnisend al sistema de fidelización sin una invitación clara a activar la cuenta. El registro real necesita correo verificado antes de mostrar saldos o permitir canjes.
+
 ## 4. Vercel
 
 1. Importa el repositorio y establece el directorio raíz como `/`.

@@ -8,6 +8,16 @@ La marca parte de piezas de cuero colombiano, comodidad, durabilidad, versatilid
 
 ## Mapa de experiencia
 
+Hay tres formas de llegar: una compra validada, un encuentro presencial validado o una suscripción a las novedades de la web. La tercera permite conocer el Club desde cero: no presume compra ni visita, y aceptar marketing no entrega puntos canjeables. La ruta sugerida cambia según la historia de cada persona, pero las demás acciones siguen visibles con sus requisitos.
+
+```text
+Compra ──────────┐
+Feria ───────────┼→ Conocer el Club → Verificar correo → Elegir acciones → Beneficios
+Suscripción web ─┘
+```
+
+La suscripción de marketing y la membresía son decisiones separadas. Dejar de recibir campañas no borra la cuenta ni su historial. Desde la web principal, la confirmación de suscripción o el correo de bienvenida pueden enlazar a `/registro?origen=web`; la cuenta se activa al verificar el correo.
+
 | Momento | Necesidad de la clienta | Experiencia dentro del Club | Señal de negocio | Próximo paso amable |
 | --- | --- | --- | --- | --- |
 | 1. Descubre | “¿Esta pieza es para mi vida real?” | Guía por ocasión, talla, comodidad, materiales y looks reales. | Vista de producto / guía de talla. | Guardar pieza o pedir ayuda de talla. |

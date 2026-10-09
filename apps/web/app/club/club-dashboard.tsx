@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "../../lib/supabase/browser";
 import { actionCategories, demoExtraMissions, journeyStages, missionGuide, recommendedMission, rewardGap, rewardGoal, type ActionCategory, type Mission, type Reward, type StageId } from "./club-journey";
 import { readDemoSnapshot } from "./demo-session";
+import { entryExperience, type DemoScenario } from "../../lib/club-entry";
 import styles from "./club-dashboard.module.css";
 import experience from "./club-experience.module.css";
 
@@ -13,9 +14,10 @@ type Member = { id: string; email: string; name?: string };
 type Account = { id: string; points_balance: number; tier_code: string } | null;
 const points = (value: number) => value.toLocaleString("es-CO");
 const demoStorageKey = (scenario: string) => `bm_club_demo_v2_${scenario}`;
+const purchaseOnlyActions = new Set(["SECOND_STEP", "COMPLETE_THE_LOOK", "RETURN_PURCHASE", "HONEST_REVIEW", "REAL_WALK", "VIDEO_STORY", "STYLE_TESTIMONIAL", "CARE_TIP"]);
 
-export default function ClubDashboard({ user, account, rewards, missions = [], ledger, demo = false, demoScenario = "returning", emailConsent = false, redemptionsEnabled = false }: {
-  user: Member; account: Account; rewards: Reward[]; missions?: Mission[]; ledger: Ledger[]; demo?: boolean; demoScenario?: "new" | "returning"; emailConsent?: boolean; redemptionsEnabled?: boolean;
+export default function ClubDashboard({ user, account, rewards, missions = [], ledger, demo = false, demoScenario = "returning", entrySource = "direct", hasPurchase = false, emailConsent = false, redemptionsEnabled = false }: {
+  user: Member; account: Account; rewards: Reward[]; missions?: Mission[]; ledger: Ledger[]; demo?: boolean; demoScenario?: DemoScenario; entrySource?: string; hasPurchase?: boolean; emailConsent?: boolean; redemptionsEnabled?: boolean;
 }) {
   const [balance, setBalance] = useState(account?.points_balance ?? 0);
   const [ledgerEntries, setLedgerEntries] = useState(ledger);
@@ -39,7 +41,11 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
 
   const allMissions = demo ? [...missions, ...demoExtraMissions] : missions;
   const isCompleted = (mission: Mission) => Boolean(mission.completed || demoCompletions[mission.id]);
-  const suggestedMission = recommendedMission(allMissions.map(mission => ({ ...mission, completed: isCompleted(mission) })));
+  const journeyScenario: DemoScenario = demo ? demoScenario : hasPurchase ? "returning" : entrySource === "web_subscription" ? "subscriber" : "new";
+  const entry = entryExperience(journeyScenario);
+  const canUsePurchaseActions = demo ? demoScenario === "returning" : hasPurchase;
+  const actionableMissions = demo ? allMissions : canUsePurchaseActions ? allMissions.filter(mission => ["HONEST_REVIEW", "REAL_WALK"].includes(mission.code.toUpperCase())) : [];
+  const suggestedMission = recommendedMission(actionableMissions.map(mission => ({ ...mission, completed: isCompleted(mission) })));
   const upcomingReward = rewardGoal(rewards, balance, goalRewardId, demoRedemptions);
   const availableRewards = (demo || redemptionsEnabled) ? rewards.filter(reward => reward.stock !== 0 && reward.points_cost <= balance && !demoRedemptions.includes(reward.id)).length : 0;
   const categoryMissions = allMissions.filter(mission => stageFilter ? missionGuide(mission.code).stage === stageFilter : categoryFilter === "todas" || missionGuide(mission.code).category === categoryFilter);
@@ -49,7 +55,8 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
   const completedCount = allMissions.filter(isCompleted).length;
   const tierName = account?.tier_code === "member" ? "Esencia" : account?.tier_code ?? "Esencia";
   const activeStageIndex = suggestedMission ? journeyStages.findIndex(stage => stage.id === missionGuide(suggestedMission.code).stage) : -1;
-  const quickActions = [{ code: "HONEST_REVIEW", label: "Dejar una reseña" }, { code: "VIDEO_STORY", label: "Grabar un video" }, { code: "WALK_TOGETHER", label: "Invitar a una amiga" }]
+  const quickActionLabels = [{ code: "WELCOME_PROFILE", label: "Elegir mi estilo" }, { code: "HONEST_REVIEW", label: "Dejar una reseña" }, { code: "REAL_WALK", label: "Contar mi historia" }, { code: "VIDEO_STORY", label: "Grabar un video" }, { code: "WALK_TOGETHER", label: "Invitar a una amiga" }];
+  const quickActions = quickActionLabels.filter(item => entry.eligibleQuickActions.includes(item.code) && (demo || ["HONEST_REVIEW", "REAL_WALK"].includes(item.code)))
     .map(item => ({ ...item, mission: allMissions.find(mission => mission.code.toUpperCase() === item.code) }))
     .filter((item): item is { code: string; label: string; mission: Mission } => Boolean(item.mission));
 
@@ -106,7 +113,7 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
   function simulateAction(mission: Mission) {
     const guide = missionGuide(mission.code);
     const completedTimes = demoCompletions[mission.id] ?? 0;
-    if (!demo || guide.requiresEvent || (isCompleted(mission) && !guide.repeatable) || completedTimes >= (guide.demoLimit ?? 1)) return;
+    if (!demo || (demoScenario !== "returning" && purchaseOnlyActions.has(mission.code.toUpperCase())) || guide.requiresEvent || (isCompleted(mission) && !guide.repeatable) || completedTimes >= (guide.demoLimit ?? 1)) return;
     if (mission.code === "WELCOME_PROFILE" && !demoStyleChoice) {
       setMissionMessage("Elige una preferencia de prueba antes de continuar.");
       return;
@@ -203,11 +210,11 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
     </header>
 
     <section className={experience.welcome}>
-      <div className={experience.welcomeCopy}><p className={styles.eyebrow}>CLUB BIONDA Y MORA {demo ? "· DEMO" : ""}</p><h1>Hola, {user.name?.split(" ")[0] ?? "bienvenida"}.<br /><em>Este espacio es tuyo.</em></h1><p>Elige lo que te nace hacer hoy. La ruta te orienta, pero todas las acciones están a tu alcance sin seguir un orden.</p><div className={experience.welcomeActions}>{quickActions.map(item => <button type="button" key={item.code} onClick={() => showMission(item.mission)}>{item.label} ↗</button>)}<a href="#recompensas">Ver recompensas ↗</a></div><a href="#acciones" className={experience.welcomeLink}>Explorar todas las acciones ↗</a></div>
+      <div className={experience.welcomeCopy}><p className={styles.eyebrow}>CLUB BIONDA Y MORA {demo ? "· DEMO" : ""}</p><h1>Hola, {user.name?.split(" ")[0] ?? "bienvenida"}.<br /><em>Este espacio es tuyo.</em></h1><p>{entry.introduction} La ruta te orienta, pero puedes explorar todas las opciones a tu ritmo.</p><div className={experience.welcomeActions}>{quickActions.map(item => <button type="button" key={item.code} onClick={() => showMission(item.mission)}>{item.label} ↗</button>)}{journeyScenario !== "returning" && <a href="https://biondaymora.com/">Conocer la colección ↗</a>}<a href="#recompensas">Ver recompensas ↗</a></div><a href="#acciones" className={experience.welcomeLink}>Explorar todas las acciones ↗</a></div>
       <div className={experience.wallet}><span>{demo ? "MI CLUB · PUNTOS DE EJEMPLO" : "MI CLUB · PUNTOS CONFIRMADOS"}</span><strong>{points(balance)}</strong><small>Nivel {tierName}{demo ? " · simulación" : ""}</small><a href="#tarjeta">Conocer mi tarjeta digital ↗</a><a href="#recompensas">{!demo && !redemptionsEnabled ? "Beneficios en preparación" : availableRewards > 0 ? `${availableRewards} ${availableRewards === 1 ? "recompensa a tu alcance" : "recompensas a tu alcance"}` : "Ver recompensas"} ↗</a></div>
     </section>
 
-    {demo && <p className={styles.previewNotice}>Estás explorando una demo como {demoScenario === "new" ? "clienta nueva" : "clienta que vuelve"}: no se crean puntos, compras ni canjes reales. <button type="button" onClick={resetDemo}>Reiniciar prueba</button> <a href="/admin/demo">Ver vista del equipo ↗</a></p>}
+    {demo && <p className={styles.previewNotice}>Estás explorando una demo como {entry.label}: no se crean puntos, compras ni canjes reales. <button type="button" onClick={resetDemo}>Reiniciar prueba</button> <a href="/admin/demo">Ver vista del equipo ↗</a></p>}
     {!demo && <section className={styles.consentNotice} aria-label="Preferencias de correo"><div><strong>Correos del Club</strong><p>Elige si quieres recibir por correo avisos sobre tus puntos, acciones y recompensas. Puedes cambiarlo aquí cuando quieras; no autoriza campañas generales ni la reutilización de tu contenido.</p>{consentMessage && <small role="status">{consentMessage}</small>}</div><button type="button" disabled={savingConsent} onClick={changeEmailConsent}>{savingConsent ? "Guardando…" : wantsEmail ? "Desactivar correos" : "Activar correos del Club"}</button></section>}
 
     <section className={experience.choiceSection} aria-labelledby="choice-title">
@@ -256,9 +263,10 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
         const done = isCompleted(mission);
         const demoCount = demoCompletions[mission.id] ?? 0;
         const demoLimitReached = demoCount >= (guide.demoLimit ?? 1);
-        const canSimulate = demo && !guide.requiresEvent && !pending && (!done || guide.repeatable) && !demoLimitReached;
-        const canSubmit = !demo && !done && !pending && ["HONEST_REVIEW", "REAL_WALK"].includes(mission.code.toUpperCase());
-        const status = guide.requiresEvent ? "Cuando haya feria" : pending ? "En revisión" : demo && demoLimitReached ? "Muestra completada" : done && !guide.repeatable ? "Ya realizada" : done && guide.repeatable ? demo ? "Puedes repetir con novedad" : "Nueva participación por habilitar" : "Disponible para explorar";
+        const needsPurchase = purchaseOnlyActions.has(mission.code.toUpperCase()) && !canUsePurchaseActions;
+        const canSimulate = demo && !needsPurchase && !guide.requiresEvent && !pending && (!done || guide.repeatable) && !demoLimitReached;
+        const canSubmit = !demo && !needsPurchase && !done && !pending && ["HONEST_REVIEW", "REAL_WALK"].includes(mission.code.toUpperCase());
+        const status = needsPurchase ? "Después de tu compra" : guide.requiresEvent ? "Cuando haya feria" : pending ? "En revisión" : demo && demoLimitReached ? "Muestra completada" : done && !guide.repeatable ? "Ya realizada" : done && guide.repeatable ? demo ? "Puedes repetir con novedad" : "Nueva participación por habilitar" : "Disponible para explorar";
         return <article id={`action-${mission.id}`} className={experience.actionCard} key={mission.id}>
           <div className={experience.actionCardHead}><span>{actionCategories.find(item => item.id === guide.category)?.title} · {guide.time}</span><span className={experience.actionStatus}>{status}</span></div>
           <h3>{mission.title}</h3><p>{mission.description}</p>
@@ -266,7 +274,7 @@ export default function ClubDashboard({ user, account, rewards, missions = [], l
           {demoCount > 0 && <small className={experience.demoCount}>Simulada {demoCount} de {guide.demoLimit ?? 1} {guide.demoLimit === 1 ? "vez" : "veces"} en esta visita de prueba.</small>}
           <button className={experience.detailsButton} type="button" aria-expanded={isOpen} aria-controls={`mission-${mission.id}`} onClick={() => { setOpenMission(isOpen ? null : mission.id); setMissionMessage(""); }}>{isOpen ? "Cerrar detalles" : "Ver cómo participar"} <span aria-hidden="true">{isOpen ? "−" : "↗"}</span></button>
           {isOpen && <div id={`mission-${mission.id}`} className={experience.actionDetails}><h4>Cómo participar</h4><ol>{guide.steps.map(step => <li key={step}>{step}</li>)}</ol><h4>Cuándo cuenta</h4><p>{guide.validation}</p><strong>Frecuencia: {guide.frequency}.</strong>
-            {demo && <div className={experience.demoAction}>{mission.code === "WELCOME_PROFILE" && !done && <fieldset className={experience.styleChoice}><legend>Para practicar, elige lo que más te gusta</legend>{["Comodidad para cada día", "Detalles con personalidad", "Piezas para muchas ocasiones"].map(option => <label key={option}><input type="radio" name="demo-style-choice" value={option} checked={demoStyleChoice === option} onChange={() => setDemoStyleChoice(option)} />{option}</label>)}</fieldset>}<small>Solo demostración: no enviamos datos ni otorgamos puntos reales. Las reglas y cantidades requieren aprobación antes de la beta.</small><button type="button" disabled={!canSimulate || (mission.code === "WELCOME_PROFILE" && !demoStyleChoice)} onClick={() => simulateAction(mission)}>{guide.requiresEvent ? "Esperando fecha de feria" : demoLimitReached || (done && !guide.repeatable) ? "Muestra completada" : mission.code === "WELCOME_PROFILE" ? "Guardar preferencia de prueba ↗" : "Simular esta acción ↗"}</button></div>}
+            {demo && <div className={experience.demoAction}>{mission.code === "WELCOME_PROFILE" && !done && <fieldset className={experience.styleChoice}><legend>Para practicar, elige lo que más te gusta</legend>{["Comodidad para cada día", "Detalles con personalidad", "Piezas para muchas ocasiones"].map(option => <label key={option}><input type="radio" name="demo-style-choice" value={option} checked={demoStyleChoice === option} onChange={() => setDemoStyleChoice(option)} />{option}</label>)}</fieldset>}<small>Solo demostración: no enviamos datos ni otorgamos puntos reales. Las reglas y cantidades requieren aprobación antes de la beta.</small><button type="button" disabled={!canSimulate || (mission.code === "WELCOME_PROFILE" && !demoStyleChoice)} onClick={() => simulateAction(mission)}>{needsPurchase ? "Disponible después de comprar" : guide.requiresEvent ? "Esperando fecha de feria" : demoLimitReached || (done && !guide.repeatable) ? "Muestra completada" : mission.code === "WELCOME_PROFILE" ? "Guardar preferencia de prueba ↗" : "Simular esta acción ↗"}</button></div>}
             {canSubmit && <form className={styles.missionForm} onSubmit={event => submitMission(event, mission)}><label htmlFor={`evidence-${mission.id}`}>Enlace público de tu reseña o historia</label><input id={`evidence-${mission.id}`} type="url" placeholder="https://…" value={evidenceUrl} onChange={event => setEvidenceUrl(event.target.value)} required /><small>Requiere una compra vinculada al Club. Enviar el enlace no autoriza a reutilizar tu contenido.</small><button type="submit" disabled={loading !== null}>{loading === mission.id ? "Enviando…" : "Enviar para revisión ↗"}</button></form>}
             {!demo && guide.repeatable && done && <small>Para acreditar una nueva participación necesitaremos habilitar la validación por compra, pieza, amiga o evento distinto.</small>}
             {missionMessage && <p role="status">{missionMessage}</p>}

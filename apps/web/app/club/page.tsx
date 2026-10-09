@@ -10,7 +10,7 @@ export default async function ClubPage() {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/club" as never);
-  const { data: profile } = await supabase.from("customer_profiles").select("id,email").eq("id", user.id).maybeSingle();
+  const { data: profile } = await supabase.from("customer_profiles").select("id,email,entry_source,shopify_customer_id").eq("id", user.id).maybeSingle();
   if (!profile) await supabase.from("customer_profiles").insert({ id: user.id, email: user.email ?? null });
   const { data: account } = await supabase.from("loyalty_accounts").select("id,points_balance,tier_code").eq("customer_id", user.id).maybeSingle();
   const [{ data: rewards }, { data: missions }, { data: missionProgress }, { data: consent }, { data: redemptionControl }] = await Promise.all([
@@ -27,5 +27,5 @@ export default async function ClubPage() {
     return { ...mission, completed: Boolean(state?.rewarded_at), pending: Boolean(state?.completed_at && !state?.rewarded_at) || progress?.status === "pending" || progress?.status === "submitted" };
   });
   const { data: ledger } = await supabase.from("points_ledger").select("id,event_type,amount,occurred_at,metadata").eq("account_id", account?.id ?? "00000000-0000-0000-0000-000000000000").order("occurred_at", { ascending: false }).limit(8);
-  return <ClubDashboard user={{ id: user.id, email: user.email ?? "" }} account={account} rewards={rewards ?? []} missions={missionsWithStatus} ledger={ledger ?? []} emailConsent={consent?.granted ?? false} redemptionsEnabled={redemptionControl?.enabled ?? false} />;
+  return <ClubDashboard user={{ id: user.id, email: user.email ?? "" }} account={account} rewards={rewards ?? []} missions={missionsWithStatus} ledger={ledger ?? []} entrySource={profile?.entry_source ?? "direct"} hasPurchase={Boolean(profile?.shopify_customer_id)} emailConsent={consent?.granted ?? false} redemptionsEnabled={redemptionControl?.enabled ?? false} />;
 }

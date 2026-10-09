@@ -1,10 +1,12 @@
 .teamLink{margin-top:20px!important;font:11px "Jost",Arial,sans-serif!important}
 .teamLink a{color:#4a311d;text-underline-offset:4px}
 .formError{padding:10px 12px;background:#fff2e7;color:#7b3e25!important;border:1px solid #c88967;font:12px/1.5 "Jost",Arial,sans-serif!important}
-.guestChoices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:27px 0 18px}
+.guestChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:27px 0 18px}
+.guestChoices form:last-child{grid-column:1/-1}
 .guestChoices form{margin:0!important;display:block!important}
 .guestChoices button{position:relative;width:100%;height:100%;min-height:152px;text-align:left;display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:19px 30px 19px 19px!important;background:#fffdf9!important;border:1px solid #cdb8a5!important;color:#352719!important;letter-spacing:0!important;text-transform:none!important;margin:0!important}
 .guestChoices button:hover{border-color:#a56a43!important;background:#f5eadd!important}
+.guestChoices button.highlighted{border-color:#a56a43!important;background:#f5eadd!important}
 .guestChoices button strong{font:400 23px/1.05 "DM Serif Display",Georgia,serif}
 .guestChoices button span{font:12px/1.45 "Jost",Arial,sans-serif;color:#645447}
 .guestChoices button b{position:absolute;top:17px;right:17px;color:#a56a43;font-weight:400}
@@ -13,4 +15,5 @@
 .personalize p{font:12px/1.5 "Jost",Arial,sans-serif;color:#665649}
 .personalize form{margin:16px 0 0!important}
 .personalize select{border:1px solid #d4c4b3;background:#fffdf9;padding:14px 15px;font:14px "Jost",Arial,sans-serif;color:#352719}
-@media(max-width:600px){.guestChoices{grid-template-columns:1fr}.guestChoices button{min-height:112px}.personalize{margin-top:22px}}
+.liveEntry{display:inline-block;background:#4a311d;color:#fff;padding:15px 20px;text-decoration:none;font:600 12px "Jost",Arial,sans-serif;margin:14px 0 22px}
+@media(max-width:600px){.guestChoices{grid-template-columns:1fr}.guestChoices form:last-child{grid-column:auto}.guestChoices button{min-height:112px}.personalize{margin-top:22px}}

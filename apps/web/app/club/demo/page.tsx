@@ -2,14 +2,15 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import ClubDashboard from "../club-dashboard";
+import { parseDemoScenario } from "../../../lib/club-entry";
 
-const profileSchema = z.object({ name: z.string().trim().min(2).max(80), email: z.string().email().optional(), scenario: z.enum(["new", "returning"]).optional() });
+const profileSchema = z.object({ name: z.string().trim().min(2).max(80), email: z.string().email().optional(), scenario: z.enum(["new", "returning", "subscriber"]).optional() });
 
 const rewards = [
-  { id: "11111111-1111-4111-8111-111111111111", code: "ENVIO_SIN_COSTO", title: "Envío sin costo", description: "Para que tu próxima elección llegue a ti.", points_cost: 600, stock: null },
+  { id: "11111111-1111-4111-8111-111111111111", code: "TARJETA_20000", title: "Tarjeta de regalo de $20.000", description: "Una ayuda para elegir tu próxima pieza. Valor y puntos de ejemplo, sujetos a aprobación.", points_cost: 600, stock: null },
   { id: "22222222-2222-4222-8222-222222222222", code: "KIT_DE_CUIDADO", title: "Kit de cuidado", description: "Un gesto para acompañar el cuero que amas.", points_cost: 850, stock: 8 },
-  { id: "33333333-3333-4333-8333-333333333333", code: "ACCESO_ANTICIPADO", title: "Acceso anticipado", description: "Conoce la próxima colección antes que nadie.", points_cost: 1200, stock: null },
-  { id: "44444444-4444-4444-8444-444444444444", code: "CASHBACK_50000", title: "$50.000 de cashback", description: "Un impulso para tu próxima elección Bionda y Mora.", points_cost: 1500, stock: null }
+  { id: "33333333-3333-4333-8333-333333333333", code: "PANOLETA", title: "Pañoleta Bionda y Mora", description: "Un detalle para acompañar tu estilo. Su disponibilidad real está por definir.", points_cost: 1200, stock: null },
+  { id: "44444444-4444-4444-8444-444444444444", code: "TARJETA_50000", title: "Tarjeta de regalo de $50.000", description: "Para acercarte a una nueva elección. Valor y puntos de ejemplo, sujetos a aprobación.", points_cost: 1500, stock: null }
 ];
 
 export default async function ClubDemoPage() {
@@ -20,7 +21,7 @@ export default async function ClubDemoPage() {
   const result = profileSchema.safeParse(parsed);
   if (!result.success) redirect("/registro");
   const profile = result.data;
-  const scenario = profile.scenario ?? "returning";
+  const scenario = parseDemoScenario(profile.scenario);
   const returning = scenario === "returning";
   const missions = [
     { id: "welcome-profile", code: "WELCOME_PROFILE", title: "Cuéntanos cómo caminas", description: "Completa tus preferencias para que podamos acompañarte mejor.", points_reward: 100, completed: returning },
